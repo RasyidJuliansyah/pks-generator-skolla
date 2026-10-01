@@ -1,0 +1,44 @@
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    container_name: pks-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: pks_generator
+      MYSQL_USER: pks_user
+      MYSQL_PASSWORD: pkspassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./skema-mysql.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    container_name: pks-app
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "mysql://pks_user:pkspassword@db:3306/pks_generator"
+      JWT_SECRET: "change-this-to-a-very-long-and-secure-random-secret-key-at-least-32-chars"
+      STORAGE_DIR: "/app/storage-uploads"
+      NEXT_PUBLIC_DOMAIN_WAJIB: "skolla.education"
+      DEEPSEEK_API_KEY: "${DEEPSEEK_API_KEY:-}"
+    volumes:
+      - app_uploads:/app/storage-uploads
+
+volumes:
+  mysql_data:
+  app_uploads:

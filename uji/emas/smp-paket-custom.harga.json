@@ -1,0 +1,17 @@
+{
+  "paket": null,
+  "perSiswa": [
+    115000,
+    77000
+  ],
+  "perGuru": [
+    0,
+    0
+  ],
+  "total": [
+    3450000,
+    2310000
+  ],
+  "lantaiSiswa": 77000,
+  "grandTotal": 8520000
+}

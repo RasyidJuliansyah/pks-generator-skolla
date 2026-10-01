@@ -1,0 +1,17 @@
+{
+  "paket": "LMS Juara",
+  "perSiswa": [
+    350000,
+    186000
+  ],
+  "perGuru": [
+    0,
+    0
+  ],
+  "total": [
+    105000000,
+    55800000
+  ],
+  "lantaiSiswa": 186000,
+  "grandTotal": 105000000
+}

@@ -1,0 +1,503 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum JenjangSekolah {
+  SD
+  SMP
+  SMA
+}
+
+enum StatusPo {
+  draf
+  menunggu_ttd
+  ditandatangani
+  verifikasi
+  ditolak
+  terverifikasi
+  pks_terbit
+  pks_ditandatangani
+  aktif
+  selesai
+}
+
+enum PihakTtd {
+  kepala_sekolah
+  partnership_manager
+  regional_head
+  sales_manager
+}
+
+enum FungsiVerifikasi {
+  education
+  tech_ops
+  finance
+  service_account
+}
+
+enum HasilVerifikasi {
+  setuju
+  setuju_catatan
+  tolak
+}
+
+model Pengguna {
+  id               String            @id @default(uuid()) @db.VarChar(36)
+  email            String            @unique @db.VarChar(191)
+  password         String            @default("") @db.VarChar(255)
+  nama             String?           @db.VarChar(255)
+  peran            Json              // array peran: ['sales', 'admin_utama', ...]
+  aktif            Boolean           @default(true)
+  dibuatPada       DateTime          @default(now()) @map("dibuat_pada")
+
+  sekolahDipegang  Sekolah[]
+  poDibuat         Po[]              @relation("PoPembuat")
+  poDiverifikasi   Po[]              @relation("PoVerifikator")
+  tandaTangan      TandaTangan[]
+  verifikasi       Verifikasi[]
+  suratVerifikasi  SuratVerifikasi[]
+  pksDibuat        Pks[]             @relation("PksPembuat")
+  pksDiunggah      Pks[]             @relation("PksPengunggah")
+
+  @@map("pengguna")
+}
+
+model PenggunaRiwayat {
+  id         BigInt   @id @default(autoincrement())
+  email      String   @db.VarChar(191)
+  aksi       String   @db.VarChar(50)
+  peranLama  Json?    @map("peran_lama")
+  peranBaru  Json?    @map("peran_baru")
+  namaLama   String?  @map("nama_lama") @db.VarChar(255)
+  namaBaru   String?  @map("nama_baru") @db.VarChar(255)
+  aktifLama  Boolean? @map("aktif_lama")
+  aktifBaru  Boolean? @map("aktif_baru")
+  oleh       String?  @db.VarChar(191)
+  pada       DateTime @default(now())
+
+  @@index([email])
+  @@map("pengguna_riwayat")
+}
+
+model Sekolah {
+  id            String         @id @default(uuid()) @db.VarChar(36)
+  nama          String         @db.VarChar(255)
+  npsn          String         @db.VarChar(50)
+  jenjang       JenjangSekolah
+  alamat        String         @db.Text
+  telepon       String         @db.VarChar(50)
+  email         String         @db.VarChar(191)
+  kepalaSekolah String         @map("kepala_sekolah") @db.VarChar(255)
+  kepsekHp      String         @map("kepsek_hp") @db.VarChar(50)
+  bendahara     String         @db.VarChar(255)
+  bendaharaHp   String         @map("bendahara_hp") @db.VarChar(50)
+  dibuatPada    DateTime       @default(now()) @map("dibuat_pada")
+  diubahPada    DateTime       @updatedAt @map("diubah_pada")
+  dipegangOleh  String?        @map("dipegang_oleh") @db.VarChar(191)
+
+  pengguna      Pengguna?      @relation(fields: [dipegangOleh], references: [email], onDelete: SetNull)
+  daftarPo      Po[]
+
+  @@index([npsn])
+  @@index([dipegangOleh])
+  @@map("sekolah")
+}
+
+model Po {
+  id                   String                  @id @default(uuid()) @db.VarChar(36)
+  nomor                BigInt
+  sekolahId            String                  @map("sekolah_id") @db.VarChar(36)
+  dibuatOleh           String                  @map("dibuat_oleh") @db.VarChar(191)
+  status               StatusPo                @default(draf)
+  versi                Int                     @default(1)
+  jumlahSiswa          Int                     @default(0) @map("jumlah_siswa")
+  jumlahGuru           Int                     @default(0) @map("jumlah_guru")
+  hargaSiswa           BigInt                  @default(0) @map("harga_siswa")
+  hargaGuru            BigInt                  @default(0) @map("harga_guru")
+  grandTotal           BigInt                  @default(0) @map("grand_total")
+  masaMulai            DateTime                @map("masa_mulai") @db.Date
+  masaSelesai          DateTime                @map("masa_selesai") @db.Date
+  sumberDana           String                  @map("sumber_dana") @db.VarChar(100)
+  sumberDanaLain       String?                 @map("sumber_dana_lain") @db.VarChar(255)
+  kota                 String                  @db.VarChar(100)
+  tanggalTtd           DateTime?               @map("tanggal_ttd") @db.Date
+  jumlahRombel         Int                     @default(0) @map("jumlah_rombel")
+  versiPricelist       String                  @map("versi_pricelist") @db.VarChar(50)
+  dibuatPada           DateTime                @default(now()) @map("dibuat_pada")
+  diubahPada           DateTime                @updatedAt @map("diubah_pada")
+  namaPm               String?                 @map("nama_pm") @db.VarChar(255)
+  namaSm               String?                 @map("nama_sm") @db.VarChar(255)
+  diverifikasiOleh     String?                 @map("diverifikasi_oleh") @db.VarChar(191)
+  diverifikasiPada     DateTime?               @map("diverifikasi_pada")
+  sekolahBeku          Json?                   @map("sekolah_beku")
+  asal                 String                  @default("web") @db.VarChar(50)
+  berkasUnggahan       String?                 @map("berkas_unggahan") @db.Text
+  ditinjauPada         DateTime?               @map("ditinjau_pada")
+  ditinjauOleh         String?                 @map("ditinjau_oleh") @db.VarChar(191)
+  ditinjauSidik        String?                 @map("ditinjau_sidik") @db.VarChar(100)
+  versiIom             String?                 @map("versi_iom") @db.VarChar(50)
+  permintaanTambahan   Boolean                 @default(false) @map("permintaan_tambahan")
+  nilaiSponsorship     BigInt                  @default(0) @map("nilai_sponsorship")
+  diverifikasiOtomatis Boolean                 @default(false) @map("diverifikasi_otomatis")
+  skemaTtd             Int                     @default(3) @map("skema_ttd") @db.SmallInt
+  namaRh               String?                 @map("nama_rh") @db.VarChar(255)
+  dibacaAiPada         DateTime?               @map("dibaca_ai_pada")
+  ekstraksiMenunggu    Json?                   @map("ekstraksi_menunggu")
+
+  sekolah              Sekolah                 @relation(fields: [sekolahId], references: [id])
+  pembuat              Pengguna                @relation("PoPembuat", fields: [dibuatOleh], references: [email])
+  verifikator          Pengguna?               @relation("PoVerifikator", fields: [diverifikasiOleh], references: [email], onDelete: SetNull)
+
+  kelompok             PoKelompok[]
+  komponen             PoKomponen[]
+  rombel               PoRombel[]
+  termin               PoTermin[]
+  catatan              PoCatatan[]
+  riwayat              PoRiwayat[]
+  pengecualian         PoPengecualian?
+  komentar             PoKomentar[]
+  komentarDibaca       PoKomentarDibaca[]
+  tandaTangan          TandaTangan[]
+  verifikasi           Verifikasi[]
+  verifikasiOtomatis   VerifikasiOtomatis[]
+  suratVerifikasi      SuratVerifikasi[]
+  pks                  Pks[]
+  dokumenSponsorship   PksDokumenSponsorship?
+  ekstraksi            EkstraksiPo[]
+
+  @@index([sekolahId])
+  @@index([dibuatOleh])
+  @@index([diverifikasiOleh])
+  @@index([status])
+  @@map("po")
+}
+
+model PoKelompok {
+  poId       String @map("po_id") @db.VarChar(36)
+  nomor      Int    @db.SmallInt
+  nama       String @db.VarChar(100)
+  hargaSiswa BigInt @map("harga_siswa")
+
+  po         Po     @relation(fields: [poId], references: [id], onDelete: Cascade)
+
+  @@id([poId, nomor])
+  @@map("po_kelompok")
+}
+
+model PoKomponen {
+  poId       String @map("po_id") @db.VarChar(36)
+  komponenId String @map("komponen_id") @db.VarChar(100)
+  sesi       Int    @default(1)
+  kelompok   Int    @default(1) @db.SmallInt
+
+  po         Po     @relation(fields: [poId], references: [id], onDelete: Cascade)
+
+  @@id([poId, kelompok, komponenId])
+  @@map("po_komponen")
+}
+
+model PoRombel {
+  poId        String @map("po_id") @db.VarChar(36)
+  kelas       Int
+  rombel      String @db.VarChar(50)
+  jumlahSiswa Int    @map("jumlah_siswa")
+  kelompok    Int    @default(1) @db.SmallInt
+
+  po          Po     @relation(fields: [poId], references: [id], onDelete: Cascade)
+
+  @@id([poId, kelas, rombel])
+  @@map("po_rombel")
+}
+
+model PoTermin {
+  poId    String   @map("po_id") @db.VarChar(36)
+  urutan  Int
+  tanggal DateTime @db.Date
+  nominal BigInt
+
+  po      Po       @relation(fields: [poId], references: [id], onDelete: Cascade)
+
+  @@id([poId, urutan])
+  @@map("po_termin")
+}
+
+model PoCatatan {
+  poId  String @map("po_id") @db.VarChar(36)
+  jenis String @db.VarChar(50)
+  isi   String @db.Text
+
+  po    Po     @relation(fields: [poId], references: [id], onDelete: Cascade)
+
+  @@id([poId, jenis])
+  @@map("po_catatan")
+}
+
+model PoRiwayat {
+  id         BigInt   @id @default(autoincrement())
+  poId       String   @map("po_id") @db.VarChar(36)
+  statusLama String?  @map("status_lama") @db.VarChar(50)
+  statusBaru String   @map("status_baru") @db.VarChar(50)
+  versi      Int
+  oleh       String   @db.VarChar(191)
+  pada       DateTime @default(now())
+
+  po         Po       @relation(fields: [poId], references: [id], onDelete: Cascade)
+
+  @@index([poId])
+  @@map("po_riwayat")
+}
+
+model PoPengecualian {
+  poId            String   @id @map("po_id") @db.VarChar(36)
+  lantaiDisetujui BigInt   @map("lantai_disetujui")
+  hargaDisetujui  BigInt   @map("harga_disetujui")
+  pelanggaran     Json
+  alasan          String   @db.Text
+  disetujuiOleh   String   @map("disetujui_oleh") @db.VarChar(191)
+  disetujuiPada   DateTime @default(now()) @map("disetujui_pada")
+
+  po              Po       @relation(fields: [poId], references: [id], onDelete: Cascade)
+
+  @@map("po_pengecualian")
+}
+
+model PoKomentar {
+  id           String              @id @default(uuid()) @db.VarChar(36)
+  poId         String              @map("po_id") @db.VarChar(36)
+  isi          String              @db.Text
+  oleh         String              @db.VarChar(191)
+  waktu        DateTime            @default(now())
+  versiPo      Int                 @map("versi_po")
+  disuntingPada DateTime?          @map("disunting_pada")
+  dihapusPada  DateTime?           @map("dihapus_pada")
+  dihapusOleh  String?             @map("dihapus_oleh") @db.VarChar(191)
+  namaPenulis  String?             @map("nama_penulis") @db.VarChar(255)
+  peranPenulis Json?               @map("peran_penulis")
+  indukKunci   String?             @map("induk_kunci") @db.VarChar(100)
+  kedalaman    Int                 @default(0)
+
+  po           Po                  @relation(fields: [poId], references: [id], onDelete: Cascade)
+  revisi       PoKomentarRevisi[]
+
+  @@index([poId])
+  @@map("po_komentar")
+}
+
+model PoKomentarRevisi {
+  id            BigInt     @id @default(autoincrement())
+  komentarId    String     @map("komentar_id") @db.VarChar(36)
+  isi           String     @db.Text
+  digantikanPada DateTime   @default(now()) @map("digantikan_pada")
+
+  komentar      PoKomentar @relation(fields: [komentarId], references: [id], onDelete: Cascade)
+
+  @@index([komentarId])
+  @@map("po_komentar_revisi")
+}
+
+model PoKomentarDibaca {
+  poId  String   @map("po_id") @db.VarChar(36)
+  oleh  String   @db.VarChar(191)
+  waktu DateTime @default(now())
+
+  po    Po       @relation(fields: [poId], references: [id], onDelete: Cascade)
+
+  @@id([poId, oleh])
+  @@map("po_komentar_dibaca")
+}
+
+model TandaTangan {
+  poId              String    @map("po_id") @db.VarChar(36)
+  pihak             PihakTtd
+  nama              String    @db.VarChar(255)
+  berkas            String    @db.Text
+  dibubuhkanOleh    String    @map("dibubuhkan_oleh") @db.VarChar(191)
+  waktu             DateTime  @default(now())
+  asal              String    @default("kanvas") @db.VarChar(50)
+  berkasDihapusPada DateTime? @map("berkas_dihapus_pada")
+
+  po                Po        @relation(fields: [poId], references: [id], onDelete: Cascade)
+  pembubuh          Pengguna  @relation(fields: [dibubuhkanOleh], references: [email])
+
+  @@id([poId, pihak])
+  @@index([dibubuhkanOleh])
+  @@map("tanda_tangan")
+}
+
+model Verifikasi {
+  id             String           @id @default(uuid()) @db.VarChar(36)
+  poId           String           @map("po_id") @db.VarChar(36)
+  fungsi         FungsiVerifikasi
+  hasil          HasilVerifikasi
+  catatan        String?          @db.Text
+  item           Json
+  oleh           String           @db.VarChar(191)
+  waktu          DateTime         @default(now())
+  versiPo        Int              @map("versi_po")
+  berlaku        Boolean          @default(true)
+  digantikanPada DateTime?        @map("digantikan_pada")
+  sebabBasi      String?          @map("sebab_basi") @db.Text
+
+  po             Po               @relation(fields: [poId], references: [id], onDelete: Cascade)
+  verifikator    Pengguna         @relation(fields: [oleh], references: [email])
+
+  @@index([poId])
+  @@index([oleh])
+  @@map("verifikasi")
+}
+
+model VerifikasiOtomatis {
+  id         String   @id @default(uuid()) @db.VarChar(36)
+  poId       String   @map("po_id") @db.VarChar(36)
+  versiPo    Int      @map("versi_po")
+  versiIom   String   @map("versi_iom") @db.VarChar(50)
+  lolos      Boolean
+  paket      String?  @db.VarChar(100)
+  gagal      Json
+  hasil      Json
+  dicatatPada DateTime @default(now()) @map("dicatat_pada")
+  kelompok   Json?
+
+  po         Po       @relation(fields: [poId], references: [id], onDelete: Cascade)
+
+  @@index([poId])
+  @@map("verifikasi_otomatis")
+}
+
+model SuratVerifikasi {
+  id                 String    @id @default(uuid()) @db.VarChar(36)
+  poId               String    @map("po_id") @db.VarChar(36)
+  ditandatanganiOleh String?   @map("ditandatangani_oleh") @db.VarChar(191)
+  namaPenanda        String?   @map("nama_penanda") @db.VarChar(255)
+  berkas             String?   @db.Text
+  dibuatPada         DateTime  @default(now()) @map("dibuat_pada")
+  finalPada          DateTime? @map("final_pada")
+  berkasDihapusPada  DateTime? @map("berkas_dihapus_pada")
+  otomatis           Boolean   @default(false)
+
+  po                 Po        @relation(fields: [poId], references: [id], onDelete: Cascade)
+  penandatangan      Pengguna? @relation(fields: [ditandatanganiOleh], references: [email], onDelete: SetNull)
+
+  @@index([poId])
+  @@index([ditandatanganiOleh])
+  @@map("surat_verifikasi")
+}
+
+model Pks {
+  id                 String    @id @default(uuid()) @db.VarChar(36)
+  poId               String    @map("po_id") @db.VarChar(36)
+  tahun              Int
+  bulan              Int
+  dibuatOleh         String    @map("dibuat_oleh") @db.VarChar(191)
+  dibuatPada         DateTime  @default(now()) @map("dibuat_pada")
+  finalPada          DateTime? @map("final_pada")
+  berkasBasah        String?   @map("berkas_basah") @db.Text
+  diunggahOleh       String?   @map("diunggah_oleh") @db.VarChar(191)
+  diunggahPada       DateTime? @map("diunggah_pada")
+  ditandatanganiPada DateTime? @map("ditandatangani_pada") @db.Date
+
+  po                 Po        @relation(fields: [poId], references: [id], onDelete: Cascade)
+  pembuat            Pengguna  @relation("PksPembuat", fields: [dibuatOleh], references: [email])
+  pengunggah         Pengguna? @relation("PksPengunggah", fields: [diunggahOleh], references: [email], onDelete: SetNull)
+
+  @@index([poId])
+  @@index([dibuatOleh])
+  @@index([diunggahOleh])
+  @@map("pks")
+}
+
+model PksDokumenSponsorship {
+  poId                   String   @id @map("po_id") @db.VarChar(36)
+  versiPo                Int      @map("versi_po")
+  formDitandatangani     Boolean  @default(false) @map("form_ditandatangani")
+  rekeningAtasNamaLembaga Boolean @default(false) @map("rekening_atas_nama_lembaga")
+  meteraiBilaDiAtas5juta Boolean  @default(false) @map("meterai_bila_di_atas_5juta")
+  oleh                   String   @db.VarChar(191)
+  pada                   DateTime @default(now())
+
+  po                     Po       @relation(fields: [poId], references: [id], onDelete: Cascade)
+
+  @@map("pks_dokumen_sponsorship")
+}
+
+model EkstraksiPo {
+  id           String    @id @default(uuid()) @db.VarChar(36)
+  poId         String?   @map("po_id") @db.VarChar(36)
+  diklaimOleh  String    @map("diklaim_oleh") @db.VarChar(191)
+  diklaimPada  DateTime  @default(now()) @map("diklaim_pada")
+  dicentangOleh String   @map("dicentang_oleh") @db.VarChar(191)
+  dicentangPada DateTime @default(now()) @map("dicentang_pada")
+  model        String    @db.VarChar(100)
+  selesaiPada  DateTime? @map("selesai_pada")
+  durasiMs     Int?      @map("durasi_ms")
+  tokenMasuk   Int?      @map("token_masuk")
+  tokenKeluar  Int?      @map("token_keluar")
+  berhasil     Boolean?
+  galat        String?   @db.Text
+  hasil        Json?
+
+  po           Po?       @relation(fields: [poId], references: [id], onDelete: SetNull)
+
+  @@index([poId])
+  @@map("ekstraksi_po")
+}
+
+model PengaturanEkstraksi {
+  id                BigInt   @id @default(autoincrement())
+  menyala           Boolean  @default(false)
+  penyedia          String?  @db.VarChar(100)
+  paketAkun         String?  @map("paket_akun") @db.VarChar(100)
+  model             String?  @db.VarChar(100)
+  pemeriksaanData   String?  @map("pemeriksaan_data") @db.VarChar(100)
+  risikoDiterimaOleh String? @map("risiko_diterima_oleh") @db.VarChar(191)
+  alasanRisiko      String?  @map("alasan_risiko") @db.Text
+  diubahOleh        String?  @map("diubah_oleh") @db.VarChar(191)
+  diubahPada        DateTime @default(now()) @map("diubah_pada")
+
+  @@map("pengaturan_ekstraksi")
+}
+
+model DeklarasiKesiapan {
+  produk              String   @db.VarChar(100)
+  versiProduk         String   @map("versi_produk") @db.VarChar(50)
+  butir               Json
+  berlakuSampai       DateTime @map("berlaku_sampai") @db.Date
+  ditandatanganiOleh  String   @map("ditandatangani_oleh") @db.VarChar(191)
+  ditandatanganiPada  DateTime @map("ditandatangani_pada")
+
+  @@id([produk, versiProduk])
+  @@map("deklarasi_kesiapan")
+}
+
+model HargaKomponen {
+  id         String  @id @db.VarChar(100)
+  priceList  BigInt  @map("price_list")
+  bottom     BigInt
+  grup       String  @db.VarChar(50)
+  untukGuru  Boolean @default(false) @map("untuk_guru")
+  perSesi    Boolean @default(false) @map("per_sesi")
+
+  @@map("harga_komponen")
+}
+
+model HargaPaket {
+  nama      String @id @db.VarChar(100)
+  ids       Json
+  priceList BigInt @map("price_list")
+  bottom    BigInt
+
+  @@map("harga_paket")
+}
+
+model PricelistAktif {
+  satuBaris     Boolean  @id @default(true) @map("satu_baris")
+  versi         String   @db.VarChar(50)
+  diperbaruiPada DateTime @default(now()) @map("diperbarui_pada")
+
+  @@map("pricelist_aktif")
+}

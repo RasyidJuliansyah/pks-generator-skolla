@@ -1,0 +1,58 @@
+{
+  "kelompok": [
+    {
+      "nomor": 1,
+      "siswa": 100,
+      "kelas": [
+        10
+      ],
+      "paket": null,
+      "perSiswa": [
+        279000,
+        185000
+      ],
+      "lantai": 185000,
+      "hargaSiswa": 279000,
+      "subtotal": 27900000
+    },
+    {
+      "nomor": 2,
+      "siswa": 100,
+      "kelas": [
+        11
+      ],
+      "paket": "LMS Smart",
+      "perSiswa": [
+        240000,
+        135000
+      ],
+      "lantai": 135000,
+      "hargaSiswa": 240000,
+      "subtotal": 24000000
+    },
+    {
+      "nomor": 3,
+      "siswa": 100,
+      "kelas": [
+        12
+      ],
+      "paket": "LMS Juara",
+      "perSiswa": [
+        350000,
+        186000
+      ],
+      "lantai": 186000,
+      "hargaSiswa": 350000,
+      "subtotal": 35000000
+    }
+  ],
+  "guru": {
+    "perGuru": [
+      300000,
+      164000
+    ],
+    "lantai": 164000,
+    "subtotal": 3000000
+  },
+  "grandTotal": 89900000
+}

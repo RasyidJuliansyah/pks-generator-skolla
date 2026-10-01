@@ -1,0 +1,31 @@
+{
+  "sekolah": {
+    "nama": "SMA DUMMY NUSANTARA", "npsn": "12345678", "jenjang": "SMA",
+    "alamat": "Jl. Contoh No. 1", "telepon": "021000000",
+    "kepala_sekolah": "Budi Dummy", "kepsek_hp": "081200000001",
+    "bendahara": "Sari Dummy", "bendahara_hp": "081200000002"
+  },
+  "kotak_paket": ["LMS Juara"],
+  "kotak_lain": [],
+  "custom_teks": null,
+  "harga_siswa": 350000,
+  "harga_guru": 0,
+  "rombel": [
+    { "kelas": "X", "rombel": "A", "jumlah": 32 },
+    { "kelas": "XI", "rombel": "A", "jumlah": 30 },
+    { "kelas": "XII", "rombel": "B", "jumlah": 28 }
+  ],
+  "termin": [
+    { "tanggal": "2026-01-15", "nominal": 5000000 },
+    { "tanggal": "2026-04-15", "nominal": 5000000 }
+  ],
+  "masa_mulai": "2026-01-01",
+  "masa_selesai": "2026-12-31",
+  "sumber_dana": "BOS",
+  "kota": "Surabaya",
+  "tanggal_ttd": "2026-01-10",
+  "catatan": ["Pelaksanaan dimulai Januari"],
+  "ragu": ["sekolah.bendahara_hp"],
+  "tidak_terbaca": ["sekolah.email"],
+  "peringatan": ["Tabel termin tidak rapi: kolom tanggal dan nominal tidak sejajar"]
+}

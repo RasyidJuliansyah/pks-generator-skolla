@@ -1,0 +1,107 @@
+{
+  "id": "po-1",
+  "pindaianBaru": false,
+  "sekolah": {
+    "nama": "SMA UJI",
+    "npsn": "20200001",
+    "jenjang": "SMA",
+    "kepala_sekolah": "Kepala Uji"
+  },
+  "komponen": [
+    {
+      "id": "lms",
+      "sesi": 1,
+      "kelompok": 1
+    },
+    {
+      "id": "tryout",
+      "sesi": 1,
+      "kelompok": 3
+    },
+    {
+      "id": "guruOff",
+      "sesi": 2,
+      "kelompok": 1
+    }
+  ],
+  "jumlahSiswa": 300,
+  "jumlahGuru": 20,
+  "hargaSiswa": 0,
+  "hargaGuru": 150000,
+  "masaMulai": "2026-09-01",
+  "masaSelesai": "2027-08-31",
+  "sumberDana": "BOS",
+  "kota": "Bekasi",
+  "tanggalTtd": "2026-09-12",
+  "namaPm": "Agung Uji",
+  "namaSm": "Zhurry Uji",
+  "jumlahRombel": 2,
+  "rombel": [
+    {
+      "kelas": 10,
+      "rombel": "A",
+      "jumlah": 100,
+      "kelompok": 1
+    },
+    {
+      "kelas": 10,
+      "rombel": "B",
+      "jumlah": 0,
+      "kelompok": 1
+    },
+    {
+      "kelas": 11,
+      "rombel": "A",
+      "jumlah": 100,
+      "kelompok": 1
+    },
+    {
+      "kelas": 11,
+      "rombel": "B",
+      "jumlah": 0,
+      "kelompok": 1
+    },
+    {
+      "kelas": 12,
+      "rombel": "A",
+      "jumlah": 60,
+      "kelompok": 3
+    },
+    {
+      "kelas": 12,
+      "rombel": "B",
+      "jumlah": 40,
+      "kelompok": 3
+    }
+  ],
+  "kelompok": [
+    {
+      "nomor": 1,
+      "hargaSiswa": 279000
+    },
+    {
+      "nomor": 3,
+      "nama": "Kelas 12",
+      "hargaSiswa": 350000
+    }
+  ],
+  "termin": [
+    {
+      "urutan": 1,
+      "tanggal": "2026-09-15",
+      "nominal": 0
+    }
+  ],
+  "catatan": [
+    {
+      "jenis": "pelaksanaan",
+      "isi": "Mulai semester ganjil."
+    },
+    {
+      "jenis": "sponsorship",
+      "isi": ""
+    }
+  ],
+  "asal": "platform",
+  "permintaanTambahan": false
+}

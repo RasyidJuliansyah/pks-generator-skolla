@@ -1,0 +1,997 @@
+<!doctype html><html lang="id" data-theme="dark"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Dasbor gelap</title><style>:root{
+  --bg:#F0F3F9; --surface:#FFFFFF; --surface-2:#FAFCFF;
+  --line:#D7DFE9; --line-strong:#AFBACA;
+  --ink:#2D3643; --ink-2:#455468; --muted:#455468;
+  --primary:#0E97D6; --primary-ink:#09658F; --primary-fill:#09658F;
+  --primary-fill-hover:#074C6B; --primary-soft:#CFEAF7;
+  --secondary:#010571; --accent:#F2CA17;
+  --danger:#B42318; --danger-soft:#FEE4E2; --danger-line:#D92D20;
+  --on-primary:#FFFFFF; --focus:#0E97D6;
+  --shadow:0 1px 2px rgba(45,54,67,.06), 0 10px 28px -18px rgba(1,5,113,.28);
+  --r:10px;
+}
+/* Warna status dipisah per tema. Nilai tunggal tidak mungkin lolos di
+   keduanya: emas #F2CA17 hanya 1,54:1 di atas jalur terang, sementara biru tua
+   #02219E hanya 1,54:1 di atas jalur gelap — batangnya praktis hilang. Semua
+   pasangan di bawah lolos 3:1 (WCAG 1.4.11) pada temanya masing-masing. */
+:root{
+  --st-draf:#5A6A80;
+  --st-menunggu-ttd:#8A6100;
+  --st-ditandatangani:#1D7FAE;
+  --st-verifikasi:#0B7FB4;
+  --st-ditolak:#C02318;
+  --st-terverifikasi:#09658F;
+  --st-pks-terbit:#2A5CE0;
+  --st-pks-ditandatangani:#02219E;
+  --st-aktif:#007D21;
+  --st-selesai:#455468;
+}
+
+/* Terang adalah bawaan, apa pun setelan sistem: gelap hanya berlaku bila
+   pengguna memilihnya sendiri lewat pengalih tema. */
+:root[data-theme="dark"]{
+  --bg:#000226; --surface:#010339; --surface-2:#01034B;
+  --line:#01045E; --line-strong:#02219E;
+  --ink:#F0F3F9; --ink-2:#D7DFE9; --muted:#AFBACA;
+  --primary:#5EBAE4; --primary-ink:#87CBEB; --primary-fill:#5EBAE4;
+  --primary-fill-hover:#87CBEB; --primary-soft:#01045E;
+  --secondary:#82A5FF; --accent:#F2CA17;
+  --danger:#FDA29B; --danger-soft:#3A1512; --danger-line:#F97066;
+  --on-primary:#031E2B; --focus:#5EBAE4;
+  --shadow:0 1px 2px rgba(0,0,0,.5), 0 12px 32px -20px rgba(0,0,0,.9);
+
+  --st-draf:#8897AE;
+  --st-menunggu-ttd:#F2CA17;
+  --st-ditandatangani:#36A8DD;
+  --st-verifikasi:#5EBAE4;
+  --st-ditolak:#F97066;
+  --st-terverifikasi:#87CBEB;
+  --st-pks-terbit:#82A5FF;
+  --st-pks-ditandatangani:#A9BEFF;
+  --st-aktif:#67E42C;
+  --st-selesai:#D7DFE9;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:Rubik,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:15px;line-height:1.6;font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1100px;margin:0 auto;padding:26px 20px 64px}
+/* Hanya tautan POLOS. Aturan `a:visited` yang tidak disaring punya kekhususan
+   (0,1,1) — lebih tinggi daripada `.preset` (0,1,0) — sehingga setiap tautan
+   bergaya tombol berubah warna begitu pernah dikunjungi. Ada tiga belas di
+   aplikasi ini. Menyaring dengan :not([class]) menyelesaikannya tanpa perlu
+   menaikkan kekhususan di belasan tempat. */
+a:not([class]){color:var(--primary-ink)}
+a:not([class]):visited{color:var(--primary-ink)}
+a:not([class]):hover{color:var(--primary)}
+
+/* Tautan berkelas yang memang ingin terbaca sebagai tautan menyebutnya sendiri. */
+.lini-judul a,a.lini-judul{color:var(--primary-ink)}
+.lini-judul a:hover,a.lini-judul:hover{color:var(--primary)}
+
+/* Tautan bergaya tombol tidak boleh bergaris bawah. */
+a.tombol,a.preset,a.status-chip,a.menu-item,a.sekolah-kartu{text-decoration:none}
+
+.eyebrow{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--primary-ink);font-weight:600;margin:0 0 6px}
+h1{font-size:clamp(25px,3.4vw,34px);font-weight:700;letter-spacing:-.02em;line-height:1.1;margin:0;text-wrap:balance}
+/* Paragraf TIDAK dibatasi lebarnya secara bawaan.
+   Batas 66ch pernah jadi bawaan demi keterbacaan prosa panjang, dan tiga kali
+   bocor ke tempat yang salah: paragraf dokumen cetak berakhir ~20mm lebih
+   pendek daripada judul dan tabel di sebelahnya, lalu keterangan panel, lalu
+   keterangan halaman — semuanya terbaca seperti teks terpotong. Menambalnya
+   per selektor hanya memindahkan masalahnya.
+   Yang benar-benar butuh kolom sempit meminta sendiri lewat .prosa. */
+p{margin:12px 0}
+.prosa{max-width:66ch}
+.muted{color:var(--muted)}
+header.top{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;
+  padding-bottom:16px;margin-bottom:22px;border-bottom:2px solid var(--primary)}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:600;
+  background:var(--primary-soft);color:var(--primary-ink)}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  box-shadow:var(--shadow);padding:20px 22px;margin:16px 0}
+.panel h2{font-size:15px;font-weight:600;margin:0 0 6px}
+.tengah{min-height:100dvh;display:grid;place-items:center;padding:24px}
+.kartu{width:100%;max-width:412px;background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r);box-shadow:var(--shadow);
+  padding:30px 28px 26px;text-align:center}
+.tombol{display:inline-flex;align-items:center;justify-content:center;gap:9px;width:100%;
+  min-height:46px;padding:12px 18px;border-radius:var(--r);cursor:pointer;
+  font:inherit;font-size:14.5px;font-weight:600;
+  border:1px solid var(--primary-fill);background:var(--primary-fill);color:var(--on-primary)}
+.tombol:hover{background:var(--primary-fill-hover);border-color:var(--primary-fill-hover)}
+.tombol:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.galat{margin-top:18px;padding:11px 13px;border-radius:8px;text-align:left;font-size:13px;
+  background:var(--danger-soft);color:var(--danger);border-left:4px solid var(--danger-line)}
+.keluar{font:inherit;font-size:12.5px;cursor:pointer;padding:7px 13px;border-radius:999px;min-height:36px;
+  border:1px solid var(--line-strong);background:transparent;color:var(--muted)}
+.keluar:hover{border-color:var(--danger-line);color:var(--danger)}
+
+/* ---- pengalih tema ---- */
+.tema{display:inline-flex;border:1px solid var(--line-strong);border-radius:999px;
+  overflow:hidden;background:var(--surface)}
+.tema button{display:grid;place-content:center;width:44px;height:38px;cursor:pointer;
+  border:none;background:transparent;color:var(--muted);transition:background .15s,color .15s}
+.tema button + button{border-left:1px solid var(--line)}
+.tema button:hover{background:var(--surface-2);color:var(--primary-ink)}
+.tema button:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.tema button[aria-pressed="true"]{background:var(--primary-soft);color:var(--primary-ink)}
+.tema svg{width:16px;height:16px;stroke:currentColor;stroke-width:1.75;fill:none;
+  stroke-linecap:round;stroke-linejoin:round}
+.baris-kanan{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+@media print{.tema{display:none !important}}
+
+/* ---- kalkulator ---- */
+.grid-po{display:grid;grid-template-columns:1fr 376px;gap:24px;align-items:start}
+/* Butir kisi bawaannya min-width:auto — lantainya mengikuti isi TERLEBAR, dan
+   tabel rombel (543px) menaikkan lantai itu di atas lebar ponsel. Akibatnya
+   SELURUH halaman tergulir menyamping dan bilah ponsel yang position:sticky
+   berhenti di 70% lebar. overflow-x:auto pada .kisi-rombel tidak pernah terpakai
+   karena wadahnya memang tidak pernah diizinkan menyusut. Pola sama dengan .isi. */
+.grid-po > *{min-width:0}
+@media screen and (max-width:920px){.grid-po{grid-template-columns:1fr}.ledger{position:static !important;order:0}}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  padding:12px 16px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.panel-head h2{font-size:14px;font-weight:600;margin:0}
+.panel-head .hint{font-size:11.5px;color:var(--muted)}
+.kotak{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  box-shadow:var(--shadow);overflow:hidden}
+.kotak + .kotak{margin-top:16px}
+.presets{display:flex;flex-wrap:wrap;gap:8px;padding:14px 16px}
+.preset{font:inherit;font-size:13px;font-weight:500;cursor:pointer;min-height:38px;
+  padding:7px 14px;border-radius:999px;border:1px solid var(--line-strong);
+  background:var(--surface);color:var(--ink-2);transition:background .15s,border-color .15s,color .15s}
+.preset:hover{border-color:var(--primary);color:var(--primary-ink)}
+.preset:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.preset[aria-pressed="true"]{background:var(--primary-fill);border-color:var(--primary-fill);color:var(--on-primary)}
+/* Perlakuan yang sama dengan .aksi-termin: tombol mati harus TERLIHAT mati. Berlaku
+   juga untuk "+ Tambah kelompok", yang selama ini mati tanpa tanda apa pun. */
+.preset[disabled]{opacity:.45;cursor:not-allowed}
+.preset[disabled]:hover{border-color:var(--line-strong);color:inherit}
+/* .tombol SENGAJA menyusul di sini (catatan/25): tanpa ini, tombol yang dimatikan syarat
+   -- "Simpan sebagai draf", "Baca scan", tombol konfirmasi langkah -- tampil berwarna penuh
+   dan terlihat bisa ditekan, padahal tekanannya tidak melakukan apa pun. Tombol yang berbohong
+   soal keadaannya lebih buruk daripada tombol yang tidak ada. */
+.tombol[disabled]{opacity:.45;cursor:not-allowed}
+.tombol[disabled]:hover{background:var(--primary-fill);border-color:var(--primary-fill)}
+.daftar{list-style:none;margin:0;padding:0}
+.daftar li{border-top:1px solid var(--line)}
+.daftar li:first-child{border-top:none}
+.baris{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;
+  padding:10px 16px;min-height:46px;cursor:pointer;transition:background .15s}
+.baris:hover{background:var(--surface-2)}
+.baris input[type=checkbox]{appearance:none;width:20px;height:20px;flex:none;margin:0;cursor:pointer;
+  border:1.5px solid var(--line-strong);border-radius:5px;background:var(--surface);
+  display:grid;place-content:center;transition:background .15s,border-color .15s}
+.baris input[type=checkbox]::after{content:"";width:11px;height:11px;transform:scale(0);
+  transition:transform .15s ease-out;background:var(--on-primary);
+  clip-path:polygon(14% 47%,0 62%,38% 100%,100% 22%,85% 8%,36% 70%)}
+.baris input[type=checkbox]:checked{background:var(--primary);border-color:var(--primary)}
+.baris input[type=checkbox]:checked::after{transform:scale(1)}
+.baris input[type=checkbox]:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.nama{font-size:14px;font-weight:500}
+.meta{display:block;font-size:11.5px;color:var(--muted);margin-top:1px}
+.tag{font-size:12.5px;color:var(--muted);white-space:nowrap;font-weight:500}
+.kanan{display:flex;align-items:center;gap:12px}
+.baris[data-mati="1"] .sesi{opacity:.45;pointer-events:none}
+.sesi{display:flex;align-items:center;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}
+.sesi button{font:inherit;font-size:16px;line-height:1;width:32px;height:34px;cursor:pointer;
+  border:none;background:var(--surface-2);color:var(--ink-2)}
+.sesi button:hover{background:var(--primary-soft);color:var(--primary-ink)}
+.sesi button:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.sesi input{font:inherit;font-size:13px;width:40px;height:34px;text-align:center;border:none;
+  background:var(--surface);color:var(--ink);-moz-appearance:textfield}
+.sesi input::-webkit-outer-spin-button,.sesi input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.ledger{position:sticky;top:16px}
+.peserta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 16px;
+  border-bottom:1px solid var(--line);background:var(--surface-2)}
+.peserta label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.peserta input{font:inherit;font-size:15px;font-weight:600;width:78px;padding:7px 9px;
+  border:1px solid var(--line-strong);border-radius:8px;min-height:38px;
+  background:var(--surface);color:var(--ink)}
+.tier{padding:12px 16px 14px;border-top:1px solid var(--line);position:relative}
+.tier:first-of-type{border-top:none}
+.tier::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--tc)}
+.tier-atas{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.tier-nama{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--tci)}
+.tier-per{font-size:11.5px;color:var(--muted)}
+.tier-total{font-weight:700;font-size:clamp(21px,2.3vw,25px);letter-spacing:-.02em;margin-top:2px}
+.t0{--tc:#0E97D6;--tci:var(--primary-ink)}
+.t1{--tc:var(--secondary);--tci:var(--secondary)}
+.t2{--tc:#5E718D;--tci:var(--muted)}
+.halangan{padding:11px 16px;border-top:1px solid var(--line);font-size:12.5px;line-height:1.5;
+  background:var(--danger-soft);color:var(--danger);border-left:4px solid var(--danger-line)}
+.halangan ul{margin:6px 0 0;padding-left:18px}
+.cocok{display:flex;align-items:center;gap:8px;padding:9px 16px;border-top:1px solid var(--line);
+  background:var(--primary-soft);font-size:12.5px;color:var(--primary-ink);font-weight:500}
+.cocok .titik{width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none}
+.rincian{border-top:1px solid var(--line)}
+.rincian summary{padding:11px 16px;cursor:pointer;font-size:11.5px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--muted);font-weight:600;min-height:44px;display:flex;align-items:center}
+.rincian table{width:100%;border-collapse:collapse;font-size:12.5px;white-space:nowrap}
+.rincian th{text-align:right;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;padding:0 16px 6px}
+.rincian th:first-child{text-align:left}
+.rincian td{padding:5px 16px;border-top:1px solid var(--line);text-align:right;color:var(--ink-2)}
+.rincian td:first-child{text-align:left;color:var(--ink)}
+.gulir{overflow-x:auto}
+@media screen and (max-width:520px){
+  .baris{grid-template-columns:auto 1fr;row-gap:10px}
+  .baris .kanan{grid-column:2;justify-content:flex-end}
+  .sesi button{width:44px;height:44px}
+  .sesi input{width:52px;height:44px}
+  .peserta input{min-height:44px}
+}
+.panel-tautan{display:block;text-decoration:none;color:inherit;transition:border-color .15s,transform .1s}
+.panel-tautan:hover{border-color:var(--primary)}
+.panel-tautan:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+/* ---- kerangka sidebar ---- */
+.kerangka{display:grid;grid-template-columns:248px 1fr;min-height:100dvh}
+.sisi{display:flex;flex-direction:column;gap:8px;padding:20px 14px;
+  background:var(--surface);border-right:1px solid var(--line);position:sticky;top:0;height:100dvh}
+.sisi-kepala{padding:0 10px 14px;border-bottom:1px solid var(--line)}
+.sisi-kepala strong{display:block;font-size:15px;font-weight:600;margin-top:2px}
+.menu{display:flex;flex-direction:column;gap:2px;margin-top:6px}
+.menu-item{display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:9px;
+  min-height:42px;text-decoration:none;color:var(--ink-2);font-size:14px;font-weight:500;
+  transition:background .15s,color .15s}
+.menu-item:hover{background:var(--surface-2);color:var(--primary-ink)}
+.menu-item:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.menu-item[aria-current="page"]{background:var(--primary-soft);color:var(--primary-ink);font-weight:600}
+.menu-item svg{width:18px;height:18px;flex:none;stroke:currentColor;stroke-width:1.7;fill:none;
+  stroke-linecap:round;stroke-linejoin:round}
+.sisi-kaki{margin-top:auto;padding-top:14px;border-top:1px solid var(--line);
+  display:flex;flex-direction:column;gap:10px}
+.sisi-akun{display:flex;flex-direction:column;padding:0 10px;font-size:12.5px;line-height:1.4}
+.sisi-akun strong{font-size:13.5px;font-weight:600}
+.sisi-akun span{color:var(--muted);font-size:11.5px}
+.isi{min-width:0;padding:26px 24px 64px}
+.isi .wrap{padding:0;max-width:1080px}
+/* Bilah ponsel: hanya muncul di layar sempit, dan menempel di atas saat digulir. */
+.bar-ponsel{display:none}
+.burger{display:inline-flex;align-items:center;gap:8px;font:inherit;font-size:13px;
+  font-weight:600;cursor:pointer;min-height:40px;padding:8px 13px;border-radius:999px;
+  border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2)}
+.burger:hover{border-color:var(--primary);color:var(--primary-ink)}
+.burger:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.burger svg{width:18px;height:18px;stroke:currentColor;stroke-width:1.9;fill:none;
+  stroke-linecap:round}
+.tirai{display:none}
+
+@media screen and (max-width:860px){
+  .kerangka{grid-template-columns:1fr}
+
+  .bar-ponsel{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    position:sticky;top:0;z-index:30;padding:8px 16px;background:var(--surface);
+    border-bottom:1px solid var(--line)}
+  .bar-judul strong{display:block;font-size:14.5px;font-weight:600;margin-top:1px}
+
+  /* Panel menutupi isi, bukan mendorongnya: mendorong isi membuat posisi
+     bacaan melompat setiap kali menu dibuka. */
+  .sisi{display:none}
+  .sisi.terbuka{display:flex;position:fixed;top:57px;left:0;right:0;z-index:29;
+    height:auto;max-height:calc(100dvh - 57px);overflow-y:auto;
+    border-right:none;border-bottom:1px solid var(--line);box-shadow:var(--shadow)}
+  .sisi.terbuka .sisi-kepala{display:none}
+  .tirai{display:block;position:fixed;inset:57px 0 0;z-index:28;border:0;padding:0;
+    background:rgba(1,3,73,.35);cursor:default}
+
+  .menu{flex-direction:column}
+  .menu-item{flex:none}
+  .sisi-kaki{flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap}
+  .isi{padding:20px 16px 56px}
+}
+
+/* ---- KPI ---- */
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin:18px 0 8px}
+.kpi-kotak{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  box-shadow:var(--shadow);padding:16px 18px}
+.kpi-label{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600}
+/* Angka uang tidak boleh terpotong maupun terpenggal di tengah: "Rp1.897.000.00"
+   lalu "0" di baris berikutnya lebih menyesatkan daripada terpotong. Angkanya
+   dijaga utuh satu baris dan dibiarkan mengecil mengikuti lebar layar. */
+.kpi-angka{font-size:clamp(16px,1.9vw,28px);font-weight:700;letter-spacing:-.025em;
+  margin-top:6px;line-height:1.15;white-space:nowrap}
+.kpi-kosong{color:var(--muted)}
+.kpi-jejak{font-size:12px;color:var(--muted);margin-top:4px}
+.kosong{background:var(--surface);border:1px dashed var(--line-strong);border-radius:var(--r);
+  padding:34px 22px;text-align:center;color:var(--muted);margin:16px 0}
+.kosong strong{display:block;color:var(--ink-2);font-size:15px;font-weight:600;margin-bottom:6px}
+.kosong p{margin:0 auto;max-width:46ch;font-size:13.5px}
+
+/* ---- form PO ---- */
+.isian{padding:14px 16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.isian.rapat{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.f{display:flex;flex-direction:column;gap:5px}
+.f.lebar{grid-column:1/-1}
+.f label{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.f input,.f select,.f textarea{font:inherit;font-size:14px;padding:9px 10px;border-radius:8px;
+  min-height:42px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink)}
+.f textarea{min-height:64px;resize:vertical;line-height:1.5}
+/* Isian terkunci tetap terbaca penuh (warna teks tidak diredupkan) — yang berubah
+   latar dan garisnya, supaya jelas tidak bisa disunting. */
+.f input:disabled,.f select:disabled,.f textarea:disabled{background:var(--surface-2);
+  border-style:dashed;color:var(--ink);opacity:1;cursor:not-allowed}
+.f input:focus-visible,.f select:focus-visible,.f textarea:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+.f .bantuan{font-size:11px;color:var(--muted)}
+/* Bidang bersatuan: "Rp" dan "%" hiasan di tepi bidang, bukan bagian dari nilai
+   yang diketik, supaya kursor tidak pernah berebut tempat dengannya. */
+.f .uang{position:relative;display:flex}
+.f .uang input{flex:1;width:100%}
+.f .uang-awalan,.f .uang-akhiran{position:absolute;top:50%;transform:translateY(-50%);
+  font-size:14px;color:var(--muted);pointer-events:none}
+.f .uang-awalan{left:11px}
+.f .uang-akhiran{right:11px}
+.f .uang:has(.uang-awalan) input{padding-left:34px}
+.f .uang:has(.uang-akhiran) input{padding-right:28px}
+/* Pilihan satuan (Rp / %) di sebelah label: sepasang .preset yang dirapatkan. */
+.alih-satuan{display:flex;gap:6px;margin-bottom:1px}
+.alih-satuan .preset{min-height:30px;padding:4px 12px;font-size:12.5px}
+.kisi-rombel{overflow-x:auto;padding:4px 16px 14px}
+.kisi-rombel table{border-collapse:collapse;font-size:13px}
+.kisi-rombel th{font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);
+  font-weight:600;padding:5px 7px;text-align:center}
+.kisi-rombel th:first-child{text-align:left}
+.kisi-rombel td{padding:2px}
+.kisi-rombel td:first-child{font-size:12.5px;font-weight:600;color:var(--ink-2);padding-right:9px;white-space:nowrap}
+.kisi-rombel input{font:inherit;font-size:13px;width:56px;padding:8px 4px;text-align:center;border-radius:7px;
+  border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);min-height:42px}
+.jumlah-rombel{padding:0 16px 14px;font-size:12.5px;color:var(--muted)}
+.jumlah-rombel b{color:var(--ink);font-size:14px;font-weight:600}
+.aksi-termin{display:flex;gap:8px;padding:0 16px 14px;flex-wrap:wrap}
+.aksi-termin button{font:inherit;font-size:12.5px;font-weight:500;cursor:pointer;padding:8px 13px;
+  border-radius:999px;min-height:40px;border:1px solid var(--line-strong);
+  background:var(--surface);color:var(--ink-2)}
+.aksi-termin button:hover:not([disabled]){border-color:var(--primary);color:var(--primary-ink)}
+.aksi-termin button[disabled]{opacity:.45;cursor:not-allowed}
+.pesan{margin:0 16px 14px;padding:11px 14px;border-radius:8px;font-size:12.5px;line-height:1.5}
+.pesan.buruk{background:var(--danger-soft);color:var(--danger);border-left:4px solid var(--danger-line)}
+.pesan.baik{background:var(--primary-soft);color:var(--primary-ink);border-left:4px solid var(--primary)}
+/* Pemberitahuan yang perlu diperhatikan tetapi tidak memblokir — mis. syarat dokumen
+   sponsorship yang baru menggigit di langkah terakhir (catatan/22). Warnanya sama dengan
+   .lencana.kuning, supaya keduanya terbaca sebagai satu keluarga. */
+.pesan.kuning{background:#FEFBE5;color:#8A6100;border-left:4px solid #F5D64B}
+:root[data-theme="dark"] .pesan.kuning{background:#2E2617;color:#F8E37E;border-left-color:#F2AF17}
+.pesan ul{margin:6px 0 0;padding-left:18px}
+.tabel-daftar{width:100%;border-collapse:collapse;font-size:13.5px}
+.tabel-daftar th{text-align:left;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;padding:0 14px 8px;border-bottom:1px solid var(--line-strong)}
+.tabel-daftar td{padding:11px 14px;border-bottom:1px solid var(--line);color:var(--ink-2)}
+.tabel-daftar td:first-child{color:var(--ink);font-weight:500}
+/* Tombol di dalam tabel membawa warnanya sendiri; tanpa pengecualian ini
+   teksnya jadi biru tua di atas latar biru tua alias tidak terbaca. */
+.tabel-daftar a:not(.tombol):not(.preset){color:var(--primary-ink)}
+.lencana{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;
+  background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2);white-space:nowrap}
+
+/* ---- input tanggal ----
+   Ikon kalender bawaan berwarna gelap; di mode gelap ia hilang di atas bidang
+   gelap. Dibalik warnanya, diperbesar sedikit, dan seluruh bidang dibuat
+   membuka pemilih tanggal — bukan hanya ikonnya. */
+input[type="date"]{cursor:pointer}
+input[type="date"]::-webkit-calendar-picker-indicator{
+  cursor:pointer;opacity:.65;padding:2px;margin-left:2px;
+  width:17px;height:17px;transition:opacity .15s}
+input[type="date"]:hover::-webkit-calendar-picker-indicator,
+input[type="date"]:focus::-webkit-calendar-picker-indicator{opacity:1}
+:root[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1)}
+input[type="date"]::-webkit-datetime-edit{color:var(--ink)}
+input[type="date"]:invalid::-webkit-datetime-edit,
+input[type="date"]:not(:focus):placeholder-shown::-webkit-datetime-edit{color:var(--muted)}
+
+/* ---- dokumen PO ----
+   Kotak A4 sungguhan supaya yang terlihat di layar sama dengan yang keluar di
+   kertas. Sengaja hitam-putih: dokumen ini diteken, difotokopi, dan discan. */
+.po-dokumen{margin-top:16px;overflow-x:auto}
+.po-halaman{
+  position:relative;box-sizing:border-box;
+  width:210mm;min-height:297mm;padding:14mm 14mm 26mm;
+  margin:26px auto 0;background:#fff;color:#111;
+  border:1px solid var(--line);box-shadow:var(--shadow);
+  font-family:Rubik,sans-serif;font-size:13px;line-height:1.45}
+.po-halaman:first-of-type{margin-top:22px}
+.po-nomor{position:absolute;top:-20px;left:0;font-size:11px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--muted);font-weight:600}
+.po-halaman h2{font-size:19px;font-weight:700;text-align:center;letter-spacing:-.01em;margin:0 0 20px;color:#111}
+.po-lanjutan-kepala{margin:0 0 16px;padding-bottom:6px;border-bottom:1px solid #999;
+  font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#444;font-weight:600}
+.idbaris{margin:0 0 7px;max-width:none}
+.idlabel{display:inline-block;min-width:132px;font-weight:600}
+.isian-kosong{border-bottom:1px solid #333;padding:0 5px;min-width:110px;display:inline-block}
+.kotak-centang{font-weight:700}
+.po-halaman table{width:100%;border-collapse:collapse;margin:14px 0 4px;font-size:12.5px}
+.po-halaman th,.po-halaman td{border:1px solid #444;padding:6px 8px;text-align:center}
+.po-halaman th{background:#eee;font-weight:700}
+.po-halaman td.angka{text-align:right;font-variant-numeric:tabular-nums}
+.po-halaman td.kiri{text-align:left}
+.po-halaman tr.jumlah td{font-weight:700;background:#f3f3f3}
+.po-seksi{margin-top:18px;font-weight:700;font-size:11.5px;letter-spacing:.06em;
+  text-transform:uppercase;color:#444}
+.po-tempat{margin-top:22px}
+.po-ttd{margin-top:24px}
+.po-ttd td{height:34mm;vertical-align:bottom;padding:0 8px 5mm;font-weight:400}
+.po-ttd.empat td,.po-ttd.empat th{width:25%}
+.po-ttd .ttd-nama{overflow-wrap:anywhere}
+/* Empat kolom sempit: nama panjang membungkus dua baris. Isi sel dirapatkan ke ATAS (ruang
+   tanda tangan 20mm selalu sama tinggi), jadi garisnya sejajar berapa pun baris namanya.
+   Rata bawah seperti tiga kolom akan mengangkat garis kolom yang namanya membungkus. */
+.po-ttd.empat td{vertical-align:top;padding-top:8mm}
+.ttd-ruang{display:block;height:20mm}
+.ttd-nama{display:block;border-top:1px solid #333;padding-top:5px;font-weight:600;min-height:1.4em}
+.po-catatan td{text-align:left;height:auto}
+.po-catatan td:first-child{width:34px;text-align:center;font-weight:700}
+.po-paraf{position:absolute;left:14mm;right:14mm;bottom:12mm;margin:0;
+  display:flex;justify-content:space-between;gap:26px;align-items:flex-end;
+  padding-top:8px;border-top:1px solid #999;font-size:11px;color:#333}
+.paraf-garis{display:inline-block;width:120px;border-bottom:1px solid #333;height:14px;
+  vertical-align:bottom;margin-left:6px}
+
+@media print{
+  @page{size:A4;margin:14mm}
+  html,body{background:#fff !important;color:#000 !important}
+  .kerangka{display:block}
+  /* header disembunyikan untuk merapikan antarmuka saat dicetak; blok judul
+     dokumen dikecualikan supaya tidak ikut lenyap. */
+  .sisi,.grid-po,.po-form-sisi,.no-print,.tema,.pesan,.halangan{display:none !important}
+  header:not(.pks-kepala){display:none !important}
+  .isi,.wrap{padding:0;max-width:none}
+  .po-dokumen{overflow:visible;margin:0}
+  /* Satu kotak = tepat satu halaman. Tingginya di bawah area cetak supaya
+     browser tidak menyelipkan halaman kosong karena pembulatan. */
+  .po-halaman{width:auto;min-height:0;height:255mm;margin:0;border:none;box-shadow:none;
+    padding:0 0 20mm;background:#fff;color:#000;font-size:11.5px;
+    break-after:page;page-break-after:always}
+  .po-halaman:last-of-type{break-after:auto;page-break-after:auto}
+  .po-halaman h2{font-size:17px;margin-bottom:16px}
+  .po-halaman table{margin:11px 0 3px;font-size:11px}
+  .po-halaman th{background:#eee !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .po-halaman tr.jumlah td{background:#f3f3f3 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .po-paraf{left:0;right:0;bottom:4mm;border-top:1px solid #000;color:#000}
+}
+
+/* Pratinjau dokumen berdiri di luar kisi form: kotak A4 lebih lebar dari kolom
+   dan panel harga bersifat lengket, sehingga keduanya akan saling tindih. */
+.po-dokumen{clear:both;margin-top:32px;padding-top:8px;border-top:1px solid var(--line)}
+.po-dokumen-judul{font-size:12px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;margin:0}
+
+/* ---- ringkasan status di daftar PO ---- */
+.status-baris{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 4px}
+.status-chip{display:flex;align-items:center;gap:8px;padding:9px 13px;border-radius:10px;
+  min-height:44px;text-decoration:none;border:1px solid var(--line);background:var(--surface);
+  color:var(--ink-2);font-size:12.5px;font-weight:500;transition:border-color .15s,background .15s}
+.status-chip:hover{border-color:var(--primary);color:var(--primary-ink)}
+.status-chip:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.status-chip[aria-current="true"]{background:var(--primary-soft);border-color:var(--primary);color:var(--primary-ink)}
+.status-chip .n{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.status-chip.nol{opacity:.55}
+.status-chip .titik{width:8px;height:8px;border-radius:2px;flex:none}
+
+/* ---- tanda tangan ---- */
+.ttd-kisi{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin:16px 0}
+.ttd-kartu{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  box-shadow:var(--shadow);padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.ttd-kartu h3{margin:0;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.ttd-gambar{background:#fff;border:1px solid var(--line);border-radius:8px;height:92px;
+  display:grid;place-items:center;overflow:hidden}
+.ttd-gambar img{max-width:100%;max-height:100%;object-fit:contain}
+.ttd-kosong{height:92px;border:1px dashed var(--line-strong);border-radius:8px;
+  display:grid;place-items:center;color:var(--muted);font-size:12.5px}
+.ttd-nama-kartu{font-size:14px;font-weight:600}
+.ttd-waktu{font-size:11.5px;color:var(--muted)}
+.ttd-kanvas-bungkus{margin:14px 0}
+.ttd-kanvas{width:100%;height:200px;background:#fff;border:1px solid var(--line-strong);
+  border-radius:10px;touch-action:none;cursor:crosshair;display:block}
+.ttd-petunjuk{font-size:12px;color:var(--muted);margin:8px 0 0}
+.ttd-aksi{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.catatan-judul{display:block;font-weight:600}
+.catatan-isi{display:block;margin-top:3px;white-space:pre-wrap}
+.po-catatan td{padding-top:8px;padding-bottom:8px;vertical-align:top}
+.ttd-gambar-cetak{display:block;height:20mm;max-width:100%;object-fit:contain;object-position:left bottom}
+@media print{.ttd-gambar-cetak{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+
+/* ---- verifikasi ---- */
+.lencana.hijau{background:#F2FFED;border-color:#A3F080;color:#007D21}
+.lencana.merah{background:var(--danger-soft);border-color:var(--danger-line);color:var(--danger)}
+:root[data-theme="dark"] .lencana.hijau{background:#0C2A10;border-color:#005E18;color:#67E42C}
+.preset.merah{border-color:var(--danger-line);color:var(--danger)}
+.preset.merah:hover:not([disabled]){background:var(--danger-soft)}
+.periksa{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:2px}
+.periksa li{border-top:1px solid var(--line)}
+.periksa li:first-child{border-top:none}
+.periksa label{display:flex;align-items:flex-start;gap:11px;padding:10px 2px;
+  min-height:44px;cursor:pointer;font-size:14px;line-height:1.45}
+.periksa input[type=checkbox]{appearance:none;width:20px;height:20px;flex:none;margin:2px 0 0;
+  cursor:pointer;border:1.5px solid var(--line-strong);border-radius:5px;background:var(--surface);
+  display:grid;place-content:center}
+.periksa input[type=checkbox]::after{content:"";width:11px;height:11px;transform:scale(0);
+  transition:transform .15s ease-out;background:var(--on-primary);
+  clip-path:polygon(14% 47%,0 62%,38% 100%,100% 22%,85% 8%,36% 70%)}
+.periksa input[type=checkbox]:checked{background:var(--primary);border-color:var(--primary)}
+.periksa input[type=checkbox]:checked::after{transform:scale(1)}
+.periksa input[type=checkbox]:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.titik-fungsi{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;
+  background:var(--line-strong)}
+.titik-fungsi.hijau{background:#007D21}
+.titik-fungsi.merah{background:var(--danger-line)}
+.lencana.kuning{background:#FEFBE5;border-color:#F5D64B;color:#8A6100}
+:root[data-theme="dark"] .lencana.kuning{background:#2E2617;border-color:#F2AF17;color:#F8E37E}
+.preset.kuning{border-color:#F2AF17;color:#8A6100}
+:root[data-theme="dark"] .preset.kuning{color:#F8E37E}
+.riwayat{margin-top:18px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+.riwayat summary{padding:12px 16px;cursor:pointer;font-size:12.5px;font-weight:600;
+  letter-spacing:.04em;text-transform:uppercase;color:var(--muted);min-height:44px;
+  display:flex;align-items:center}
+.riwayat summary:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.riwayat-daftar{list-style:none;margin:0;padding:0 16px 14px}
+.riwayat-daftar li{padding:12px 0;border-top:1px solid var(--line)}
+.riwayat-kepala{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:13.5px}
+.syarat{margin:0;padding-left:20px;font-size:13.5px;line-height:1.55}
+.syarat li{margin-top:5px}
+.surat p{font-size:13px;line-height:1.7;margin:0 0 11px;text-align:justify}
+.surat h2{margin-bottom:24px}
+/* Dua kolom, supaya baris yang panjang meneruskan di bawah nilainya dan tidak
+   balik ke margin kiri. */
+.surat-baris{margin:0 0 3px !important;text-align:left !important;display:flex}
+.surat-label{flex:0 0 210px}
+.surat-nilai{flex:1}
+.surat-daftar{margin:0 0 11px;padding-left:22px;font-size:13px;line-height:1.7}
+.surat-sumber{color:#555}
+.surat-ttd{margin-top:46px;font-size:13px;line-height:1.7}
+.surat-ttd p{margin:0}
+.surat-nama{font-weight:600;margin-top:6px !important}
+/* Ruang kosong menyamai tinggi gambar, supaya letak nama tidak bergeser antara
+   surat yang belum dan sudah ditandatangani. */
+.surat-ruang-ttd{display:block;height:64px}
+.surat-gambar-ttd{display:block;height:64px;width:auto;max-width:230px;object-fit:contain;
+  margin:2px 0 0;mix-blend-mode:multiply}
+@media print{.surat-gambar-ttd{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+.titik-fungsi.kuning{background:#F2AF17}
+
+/* Wadah di layar; kertasnya sendiri yang berlatar putih. */
+.pks-dokumen{margin-top:20px;overflow-x:auto}
+@media print{.pks-dokumen{margin:0;overflow:visible}}
+
+/* ===== Perjanjian Kerja Sama =====
+   Kop PKS asli adalah gambar satu halaman penuh yang berulang di tiap halaman,
+   dengan kotak paraf di kiri bawah dan nomor halaman di kanan bawah. Halamannya
+   dipatok tetap dan diisi oleh KertasPks setelah isinya diukur. */
+.pks-kertas{position:relative;width:210mm;min-height:297mm;height:297mm;
+  background:#fff url('/kop-pks.png') no-repeat center/210mm 297mm;
+  margin:0 auto 18px;box-shadow:0 1px 3px rgba(16,24,40,.14);overflow:hidden}
+.pks-isi{position:absolute;left:25.4mm;right:25.4mm;top:26mm;height:242mm;overflow:visible}
+.pks-ukur{position:absolute;left:-10000px;top:0;width:159.2mm;visibility:hidden}
+.pks-ukur .pks-pasal,.pks-kertas .pks-pasal{break-inside:auto}
+
+.pks{font-family:'Times New Roman',Times,serif;font-size:12pt;line-height:1.5;color:#111}
+.pks p{margin:0 0 9px;text-align:justify}
+.pks-kepala{text-align:center;margin-bottom:6px;border-bottom:1px solid #111;padding-bottom:8px}
+.pks-kepala h2{font-size:13pt;font-weight:700;margin:0 0 2px;letter-spacing:.01em}
+.pks-kepala p{text-align:center;margin:0 0 2px}
+/* Kedua baris nomor sejajar pada satu takuk, seperti PKS asli (mulai 55,1mm
+   dari tepi kiri kertas). Dipusatkan sendiri-sendiri membuat keduanya tidak
+   segaris. */
+.pks-nomor-baris{margin:0 0 3px !important;text-align:left !important;
+  padding-left:29.7mm}
+.pks-isian{border-bottom:1px solid #111;display:inline-block;min-width:36px}
+/* Ruang isian tidak boleh terlepas dari kata yang menjelaskannya. */
+.pks-utuh{white-space:nowrap}
+/* Jarak antarpasal: sekitar dua baris kosong, seperti dokumen aslinya. */
+.pks-pasal{margin-top:20px}
+.pks-pasal h3{text-align:center;font-size:12pt;font-weight:700;margin:0 0 9px;line-height:1.35}
+.pks-pasal h3 span{display:block}
+.pks ol{margin:0 0 9px;padding-left:24px}
+.pks ol li{margin-bottom:6px;text-align:justify}
+.pks ol.huruf{list-style:lower-alpha}
+.pks ul{margin:6px 0;padding-left:22px;list-style:disc}
+.pks ul li{margin-bottom:3px;text-align:justify}
+/* Lebar kolom mengikuti PKS asli: nomor mulai 3,2mm, nama 10,4mm, dan uraian
+   79,4mm dari tepi kiri kertas. Kolom uraian dibuat selebar mungkin (~88mm,
+   sedekat mungkin dengan 89mm pada aslinya) supaya teks rata kanan-kiri tidak
+   melebar jadi sungai spasi. Hanya uraian yang dirata kanan-kiri — nama
+   yang ikut diregangkan akan patah di tengah, seperti "KUSTIONO,  S.T.," lalu
+   "M.M." di baris berikutnya. */
+.pks-pihak{width:100%;border-collapse:collapse;margin:0 0 10px;table-layout:fixed}
+.pks-pihak td{vertical-align:top;padding:3px 0 8px 0;text-align:left}
+.pks-pihak td:first-child{width:10mm}
+.pks-pihak td:nth-child(2){width:58mm;padding-right:3mm}
+.pks-pihak td:nth-child(3){width:3.4mm}
+.pks-pihak td:last-child{text-align:justify}
+.pks-rekening{border-collapse:collapse;margin:5px 0}
+.pks-rekening td{padding:2px 8px 2px 0;vertical-align:top}
+.pks-rekening td:first-child{width:110px}
+.pks-korespondensi{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:10px}
+.pks-ttd{width:100%;border-collapse:collapse;margin-top:28px}
+.pks-ttd td{width:50%;text-align:center;vertical-align:top;padding:0 10px;line-height:1.45}
+.pks-ruang-ttd{display:block;height:80px}
+
+/* Perabot halaman, mengikuti letak di PKS asli. */
+/* Letaknya diukur dari render PKS asli: kotak paraf 8mm dari tepi kiri dan
+   7,6mm dari tepi bawah, lebar 31,5mm, tinggi 13mm; nomor halaman 26,5mm dari
+   tepi kanan dengan dasar teks 18,6mm dari tepi bawah. */
+.pks-paraf{position:absolute;left:8mm;bottom:7.6mm;border-collapse:collapse;
+  font-family:Arial,Helvetica,sans-serif;font-size:6.5pt;color:#111}
+.pks-paraf td{border:1px solid #111;width:15.75mm;height:6.5mm;text-align:center;padding:0}
+.pks-halaman{position:absolute;right:26.5mm;bottom:18mm;
+  font-family:'Times New Roman',Times,serif;font-size:11pt;line-height:1;color:#111}
+
+@media screen and (max-width:860px){
+  .pks-kertas{width:100%;height:auto;min-height:0;background-size:100% auto;
+    background-position:top center;padding:20mm 6mm 26mm}
+  .pks-isi{position:static;height:auto;overflow:visible}
+  .pks-paraf,.pks-halaman{position:static;margin-top:14px}
+  .pks-korespondensi{grid-template-columns:1fr}
+}
+
+@media print{
+  .pks-kertas{box-shadow:none;margin:0;break-after:page;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pks-kertas:last-of-type{break-after:auto}
+  .pks-ukur{display:none}
+}
+.peran-pilih{border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin:14px 0 0;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:4px 14px}
+.peran-pilih legend{font-size:12.5px;font-weight:600;color:var(--muted);padding:0 6px}
+.peran-pilih label{display:flex;align-items:center;gap:8px;font-size:13.5px;
+  min-height:34px;cursor:pointer}
+
+/* ===== Grafik dasbor =====
+   Dirakit di server sebagai SVG; warnanya memakai token tema supaya ikut
+   berubah di mode gelap tanpa JavaScript apa pun. */
+.grid-dua{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media screen and (max-width:860px){.grid-dua{grid-template-columns:1fr}}
+
+.grafik{width:100%;height:auto;display:block;margin-top:10px;overflow:visible}
+.grafik-garis{stroke:var(--line);stroke-width:1}
+.grafik-sumbu{fill:var(--muted);font-size:11px;font-family:inherit}
+.grafik-sumbu.kecil{font-size:10px}
+.grafik-batang{fill:var(--primary-fill)}
+
+.komposisi,.corong{list-style:none;margin:12px 0 0;padding:0;display:flex;
+  flex-direction:column;gap:7px}
+.komposisi li,.corong li{display:grid;grid-template-columns:132px 1fr 84px;
+  align-items:center;gap:10px;font-size:13px}
+.komposisi-label,.corong-label{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+.komposisi-jalur,.corong-jalur{height:10px;border-radius:999px;background:var(--surface-2);
+  border:1px solid var(--line);overflow:hidden}
+.komposisi-isi,.corong-isi{display:block;height:100%;border-radius:999px}
+.corong-isi{background:var(--primary-fill)}
+.komposisi-angka,.corong-angka{text-align:right;font-variant-numeric:tabular-nums;
+  color:var(--ink)}
+.corong-turun{color:var(--danger);font-size:12px}
+@media screen and (max-width:520px){
+  .komposisi li,.corong li{grid-template-columns:96px 1fr 70px;font-size:12.5px}
+}
+
+/* Komposisi sebagai cincin, dengan keterangan di sampingnya. */
+.donat-baris{display:flex;align-items:center;gap:18px;margin-top:12px;flex-wrap:wrap}
+.donat{width:132px;height:132px;flex:0 0 auto}
+.donat-juring{stroke:var(--surface);stroke-width:1.5}
+.donat-total{fill:var(--ink);font-size:22px;font-weight:700;font-family:inherit}
+.donat-satuan{fill:var(--muted);font-size:10px;letter-spacing:.08em;font-family:inherit}
+.donat-ket{list-style:none;margin:0;padding:0;flex:1 1 190px;display:flex;
+  flex-direction:column;gap:5px}
+.donat-ket li{display:grid;grid-template-columns:10px 1fr auto;align-items:center;
+  gap:9px;font-size:13px}
+.donat-ket li.nol{opacity:.45}
+.donat-titik{width:10px;height:10px;border-radius:3px;display:block}
+.donat-label{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.donat-angka{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink)}
+
+/* Corong sebagai alur bertahap. */
+.alur{list-style:none;margin:14px 0 0;padding:0 0 4px;display:flex;align-items:stretch;gap:0}
+.alur li{display:flex;align-items:center;flex:0 0 auto}
+.alur-kotak{display:flex;flex-direction:column;gap:2px;padding:12px 14px;min-width:132px;
+  border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2)}
+.alur-angka{font-size:24px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.alur-label{font-size:12.5px;color:var(--ink-2)}
+.alur-turun{font-size:11.5px;color:var(--danger)}
+.alur-panah{display:flex;flex-direction:column;align-items:center;gap:2px;padding:0 8px;
+  flex:0 0 auto}
+.alur-persen{font-size:12px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+.alur-persen.rendah{color:var(--danger)}
+.alur-ikon{width:24px;height:12px;fill:none;stroke:var(--line-strong);stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round}
+@media screen and (max-width:860px){
+  .alur{flex-direction:column;align-items:stretch}
+  .alur li{flex-direction:column;align-items:stretch}
+  .alur-panah{flex-direction:row;justify-content:center;gap:8px;padding:6px 0}
+  .alur-ikon{transform:rotate(90deg)}
+  .alur-kotak{min-width:0}
+}
+
+/* Keterangan panel mengalir selebar panelnya. Batas 66ch di aturan umum p
+   membuatnya berhenti di tengah kotak yang jauh lebih lebar dan terbaca
+   seperti teks terpotong. */
+
+
+/* Pilihan cepat di kiri, rentang khusus di pojok kanan. Tingginya disamakan
+   dengan chip (44px) supaya barisnya duduk pada satu garis. */
+.saring-waktu{display:flex;flex-wrap:wrap;align-items:center;
+  justify-content:space-between;gap:12px;margin:18px 0 4px}
+.saring-waktu .status-baris{margin:0}
+
+/* Rentang khusus dibungkus satu kotak supaya terbaca sebagai satu kendali,
+   bukan empat kotak yang kebetulan berdampingan. */
+.saring-tanggal{display:flex;align-items:center;gap:8px;min-height:44px;
+  padding:0 6px 0 13px;border:1px solid var(--line);border-radius:10px;
+  background:var(--surface);font-size:12.5px}
+.saring-tanggal label{color:var(--muted);white-space:nowrap}
+.saring-tanggal input[type="date"]{border:0;background:transparent;color:var(--ink);
+  font:inherit;font-size:12.5px;padding:6px 2px;min-height:32px;
+  font-variant-numeric:tabular-nums}
+.saring-tanggal input[type="date"]:focus-visible{outline:2px solid var(--focus);
+  outline-offset:2px;border-radius:6px}
+.saring-tanggal .preset{min-height:32px;padding:6px 12px;font-size:12.5px}
+@media screen and (max-width:720px){
+  .saring-waktu{flex-direction:column;align-items:stretch}
+  /* Sebaris berempat tidak muat di ponsel dan membungkus berantakan. Dijadikan
+     kisi: label di kiri, isian mengisi sisanya, tombol selebar penuh. */
+  .saring-tanggal{display:grid;grid-template-columns:auto 1fr;align-items:center;
+    gap:8px 12px;padding:12px 14px;min-height:0}
+  .saring-tanggal input[type="date"]{width:100%;padding:8px 4px;min-height:38px}
+  .saring-tanggal .preset{grid-column:1/-1;justify-content:center;min-height:40px}
+}
+
+/* Sorot saat kursor menyentuh grafik. */
+.grafik-bungkus{position:relative}
+.grafik-kolom{cursor:default}
+.grafik-kolom:focus{outline:none}
+.grafik-kolom:focus-visible rect.grafik-batang{stroke:var(--focus);stroke-width:2}
+.grafik-batang{fill:var(--primary-fill);transition:opacity .12s}
+.grafik-batang.aktif{opacity:.78}
+.grafik-nilai text{fill:var(--ink);font-size:12px;font-weight:600;font-family:inherit;
+  font-variant-numeric:tabular-nums}
+/* Warna juring dibaca dari --warna yang disetel inline. Menaruh var() langsung
+   di atribut fill maupun di properti style inline sama-sama gagal di sebagian
+   peramban dan membuat seluruh cincin hitam. */
+.donat-juring{stroke:var(--surface);stroke-width:1.5;cursor:default;transition:opacity .12s}
+.donat-cincin{fill:none}
+.donat-juring.aktif{opacity:.78}
+.donat-ket li{cursor:default;border-radius:6px}
+.donat-ket li.aktif{background:var(--surface-2)}
+
+/* Peringkat mendatar: urutan lebih penting daripada proporsi. */
+.peringkat{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.peringkat li{display:grid;grid-template-columns:minmax(96px,168px) 1fr minmax(84px,auto);
+  align-items:center;gap:10px;font-size:13px;border-radius:6px;padding:2px 4px}
+.peringkat li.aktif{background:var(--surface-2)}
+.peringkat-label{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.peringkat-jalur{height:10px;border-radius:999px;background:var(--surface-2);
+  border:1px solid var(--line);overflow:hidden}
+.peringkat-isi{display:block;height:100%;border-radius:999px}
+.peringkat-angka{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
+@media screen and (max-width:520px){
+  .peringkat li{grid-template-columns:minmax(80px,120px) 1fr auto;font-size:12.5px}
+}
+/* Titik status di dalam tabel; warnanya dari --warna yang disetel inline. */
+.titik-baris{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:6px}
+
+/* Lini masa riwayat PO. Garis vertikalnya digambar dari titiknya, bukan sebagai
+   elemen tersendiri, supaya tidak menggantung di bawah peristiwa terakhir. */
+.lini-masa{list-style:none;margin:14px 0 0;padding:0}
+.lini-masa>li{display:flex;gap:14px;padding:0 0 18px;position:relative}
+.lini-masa>li:last-child{padding-bottom:0}
+.lini-titik{flex:0 0 auto;width:11px;height:11px;border-radius:50%;margin-top:5px;position:relative}
+/* Garisnya digambar dari BUTIR, bukan dari titik. Dari titik, panjangnya tetap
+   (~18px) dan tidak pernah sampai ke titik berikutnya begitu butirnya lebih dari
+   dua baris — dan komentar hampir selalu lebih dari dua baris. */
+.lini-masa>li:not(:last-child)::before{
+  content:'';position:absolute;left:4.5px;top:20px;bottom:2px;
+  width:2px;background:var(--line)}
+.lini-judul{font-size:14px;font-weight:500}
+.lini-rincian{font-size:13px;color:var(--ink-2);margin-top:2px}
+
+/* Komentar di lini masa. Titiknya CINCIN, bukan bulatan penuh: percakapan, bukan
+   peristiwa. Warnanya dari token, jadi ikut tema tanpa blok gelap tersendiri —
+   larangan var() hanya berlaku untuk `fill` SVG, bukan latar elemen biasa. */
+.w-komentar{background:var(--surface);box-shadow:inset 0 0 0 2px var(--ink-2)}
+.komentar-isi{font-size:14px;margin-top:4px;white-space:pre-wrap;overflow-wrap:anywhere;max-width:72ch}
+.komentar-basi{font-size:12.5px;color:var(--ink-2);margin-top:4px;font-style:italic}
+.komentar-dihapus{font-style:italic}
+.komentar-revisi{margin-top:6px;font-size:12.5px;color:var(--muted)}
+.komentar-revisi summary{cursor:pointer}
+.komentar-revisi ol{list-style:none;margin:6px 0 0;padding:0 0 0 12px;border-left:2px solid var(--line)}
+.komentar-revisi li{padding:0 0 6px}
+.komentar-revisi .komentar-isi{font-size:13px;color:var(--ink-2)}
+.komentar-aksi{display:flex;gap:12px;margin-top:4px}
+.tautan-kecil{background:none;border:0;padding:0;font:inherit;font-size:12.5px;
+  color:var(--primary-ink);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.tautan-kecil:hover{color:var(--primary)}
+.tautan-kecil:disabled{opacity:.5;cursor:default}
+.komentar-kotak{margin-top:14px;max-width:720px}
+
+/* Utas balasan. Indent-nya dari marginLeft di ButirLini, bukan dari sini: tingkatnya
+   dihitung di sana dan dipagari INDENT_MAKS. */
+.lini-utas{margin:10px 0 0;padding:0}
+.lini-utas>li{padding-bottom:12px}
+.lini-utas>li:last-child{padding-bottom:0}
+.lini-balasan .lini-judul{font-size:13.5px}
+.balas-kotak{margin-top:8px;max-width:640px}
+
+/* Daftar kelengkapan cetak. Dibedakan dari .halangan biasa karena keduanya
+   bisa muncul bersamaan dan menghalangi tombol yang berbeda. */
+.halangan-cetak{background:var(--surface-2);border-color:var(--line)}
+.halangan-cetak p{margin:4px 0 6px;font-size:12.5px;color:var(--muted)}
+
+/* Kendali halaman. Dipusatkan supaya jelas ia milik seluruh daftar, bukan
+   sambungan dari kartu terakhir. */
+.halaman-baris{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:22px 0 4px}
+.halaman-baris .status-chip[aria-disabled]{pointer-events:none}
+
+/* Baris penyaring berlabel. Labelnya di kiri supaya tiga baris chip tidak
+   terbaca sebagai satu kumpulan yang sama. */
+.saring-kelompok{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.saring-label{font-size:11px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;flex:0 0 88px}
+.saring-kelompok .status-baris{margin:0;flex:1 1 320px}
+.sekolah-sales{font-size:13px;color:var(--ink-2);margin-top:6px}
+
+/* Daftar sekolah. Kisinya sendiri, bukan .kartu — kelas itu sudah dipakai kartu
+   masuk yang lebarnya dipatok 412px. */
+.sekolah-kisi{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.sekolah-kartu{display:block;background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r);padding:16px 18px;color:inherit;text-decoration:none;
+  transition:border-color .12s,box-shadow .12s}
+.sekolah-kartu:hover{border-color:var(--line-strong);box-shadow:var(--shadow)}
+.sekolah-kartu-kepala{display:flex;justify-content:space-between;align-items:baseline;
+  gap:10px;margin-bottom:4px}
+.sekolah-kartu-kepala strong{font-size:14.5px}
+.cari-baris{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+
+/* Riwayat kerja sama satu sekolah: satu kartu per PO, masing-masing memuat
+   lini masanya sendiri yang bisa dilipat. */
+.po-riwayat-kisi{display:flex;flex-direction:column;gap:14px}
+.po-riwayat-kartu{background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r);padding:16px 18px}
+.po-riwayat-kepala{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.po-riwayat-kepala .lini-titik{margin-top:0}
+.po-riwayat-status{font-size:13px;color:var(--ink-2)}
+.po-riwayat-nilai{margin-left:auto;font-weight:600;font-size:14px;white-space:nowrap}
+.po-riwayat-kartu .riwayat{margin-top:12px;background:var(--surface-2)}
+.po-riwayat-kartu .lini-masa{margin-top:12px}
+
+/* Kelas warna grafik — nilai heksa HARFIAH, tanpa var().
+   Di peramban Rizki, `fill: var(--st-x)` tidak pernah diterapkan sekalipun
+   variabelnya terbaca benar (console: --st-verifikasi = #0B7FB4, tapi fill
+   tetap rgb(0,0,0)). Empat bentuk yang memakai var() sudah gagal di sana.
+   Nilainya karena itu ditulis dua kali — terang dan gelap — supaya mode gelap
+   tetap jalan tanpa var() sama sekali di jalur ini.
+   Sumbernya tetap token di atas; kalau token berubah, perbarui blok ini juga. */
+.donat-juring.w-draf{fill:#5A6A80}
+.donat-cincin.w-draf{stroke:#5A6A80}
+.w-draf{background:#5A6A80}
+.donat-juring.w-menunggu-ttd{fill:#8A6100}
+.donat-cincin.w-menunggu-ttd{stroke:#8A6100}
+.w-menunggu-ttd{background:#8A6100}
+.donat-juring.w-ditandatangani{fill:#1D7FAE}
+.donat-cincin.w-ditandatangani{stroke:#1D7FAE}
+.w-ditandatangani{background:#1D7FAE}
+.donat-juring.w-verifikasi{fill:#0B7FB4}
+.donat-cincin.w-verifikasi{stroke:#0B7FB4}
+.w-verifikasi{background:#0B7FB4}
+.donat-juring.w-ditolak{fill:#C02318}
+.donat-cincin.w-ditolak{stroke:#C02318}
+.w-ditolak{background:#C02318}
+.donat-juring.w-terverifikasi{fill:#09658F}
+.donat-cincin.w-terverifikasi{stroke:#09658F}
+.w-terverifikasi{background:#09658F}
+.donat-juring.w-pks-terbit{fill:#2A5CE0}
+.donat-cincin.w-pks-terbit{stroke:#2A5CE0}
+.w-pks-terbit{background:#2A5CE0}
+.donat-juring.w-pks-ditandatangani{fill:#02219E}
+.donat-cincin.w-pks-ditandatangani{stroke:#02219E}
+.w-pks-ditandatangani{background:#02219E}
+.donat-juring.w-aktif{fill:#007D21}
+.donat-cincin.w-aktif{stroke:#007D21}
+.w-aktif{background:#007D21}
+.donat-juring.w-selesai{fill:#455468}
+.donat-cincin.w-selesai{stroke:#455468}
+.w-selesai{background:#455468}
+.donat-juring.w-primary-fill{fill:#09658F}
+.donat-cincin.w-primary-fill{stroke:#09658F}
+.w-primary-fill{background:#09658F}
+.donat-juring.w-muted{fill:#455468}
+.donat-cincin.w-muted{stroke:#455468}
+.w-muted{background:#455468}
+
+:root[data-theme="dark"] .donat-juring.w-draf{fill:#8897AE}
+:root[data-theme="dark"] .donat-cincin.w-draf{stroke:#8897AE}
+:root[data-theme="dark"] .w-draf{background:#8897AE}
+:root[data-theme="dark"] .donat-juring.w-menunggu-ttd{fill:#F2CA17}
+:root[data-theme="dark"] .donat-cincin.w-menunggu-ttd{stroke:#F2CA17}
+:root[data-theme="dark"] .w-menunggu-ttd{background:#F2CA17}
+:root[data-theme="dark"] .donat-juring.w-ditandatangani{fill:#36A8DD}
+:root[data-theme="dark"] .donat-cincin.w-ditandatangani{stroke:#36A8DD}
+:root[data-theme="dark"] .w-ditandatangani{background:#36A8DD}
+:root[data-theme="dark"] .donat-juring.w-verifikasi{fill:#5EBAE4}
+:root[data-theme="dark"] .donat-cincin.w-verifikasi{stroke:#5EBAE4}
+:root[data-theme="dark"] .w-verifikasi{background:#5EBAE4}
+:root[data-theme="dark"] .donat-juring.w-ditolak{fill:#F97066}
+:root[data-theme="dark"] .donat-cincin.w-ditolak{stroke:#F97066}
+:root[data-theme="dark"] .w-ditolak{background:#F97066}
+:root[data-theme="dark"] .donat-juring.w-terverifikasi{fill:#87CBEB}
+:root[data-theme="dark"] .donat-cincin.w-terverifikasi{stroke:#87CBEB}
+:root[data-theme="dark"] .w-terverifikasi{background:#87CBEB}
+:root[data-theme="dark"] .donat-juring.w-pks-terbit{fill:#82A5FF}
+:root[data-theme="dark"] .donat-cincin.w-pks-terbit{stroke:#82A5FF}
+:root[data-theme="dark"] .w-pks-terbit{background:#82A5FF}
+:root[data-theme="dark"] .donat-juring.w-pks-ditandatangani{fill:#A9BEFF}
+:root[data-theme="dark"] .donat-cincin.w-pks-ditandatangani{stroke:#A9BEFF}
+:root[data-theme="dark"] .w-pks-ditandatangani{background:#A9BEFF}
+:root[data-theme="dark"] .donat-juring.w-aktif{fill:#67E42C}
+:root[data-theme="dark"] .donat-cincin.w-aktif{stroke:#67E42C}
+:root[data-theme="dark"] .w-aktif{background:#67E42C}
+:root[data-theme="dark"] .donat-juring.w-selesai{fill:#D7DFE9}
+:root[data-theme="dark"] .donat-cincin.w-selesai{stroke:#D7DFE9}
+:root[data-theme="dark"] .w-selesai{background:#D7DFE9}
+:root[data-theme="dark"] .donat-juring.w-primary-fill{fill:#5EBAE4}
+:root[data-theme="dark"] .donat-cincin.w-primary-fill{stroke:#5EBAE4}
+:root[data-theme="dark"] .w-primary-fill{background:#5EBAE4}
+:root[data-theme="dark"] .donat-juring.w-muted{fill:#AFBACA}
+:root[data-theme="dark"] .donat-cincin.w-muted{stroke:#AFBACA}
+:root[data-theme="dark"] .w-muted{background:#AFBACA}
+
+/* Hitungan komentar belum dibaca — menu, Daftar PO, Beranda, dan butir lini masa.
+   primary-fill + on-primary: pasangan yang sudah lolos kontras di kedua tema. */
+.hitung-baru{display:inline-block;min-width:20px;padding:1px 7px;border-radius:999px;
+  background:var(--primary-fill);color:var(--on-primary);font-size:11.5px;font-weight:600;
+  line-height:1.5;text-align:center;white-space:nowrap;vertical-align:1px}
+.menu-item .hitung-baru{margin-left:auto}
+.komentar-bola{font-size:13px;color:var(--ink-2);margin:12px 0 0;max-width:720px}
+.daftar-belum{list-style:none;margin:6px 0 0;padding:0}
+.daftar-belum li{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;padding:9px 0;
+  border-top:1px solid var(--line);font-size:14px}
+.daftar-belum li:first-child{border-top:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* Ringkasan kelompok di panel harga PO. */
+.ringkas-kelompok{list-style:none;margin:0;padding:10px 16px 2px;font-size:13px}
+.ringkas-kelompok li{padding:6px 0;border-bottom:1px solid var(--line)}
+.ringkas-kelompok li span{display:block;color:var(--ink-2);font-size:12.5px}
+
+/* Wizard Form PO (catatan/11). Bilah langkah menggulir sendiri di layar sempit; status
+   langkah tidak hanya warna: angka berlatar, dan teks tersembunyi ", ada halangan". */
+.bilah-langkah{margin:0 0 16px;overflow-x:auto}
+.bilah-langkah ol{display:flex;gap:6px;list-style:none;margin:0;padding:0 0 4px}
+/* position:relative menahan teks .sr (absolut) di dalam bilah yang menggulir; tanpa itu
+   ia melebarkan seluruh halaman di ponsel. */
+.bilah-langkah button{position:relative;display:flex;align-items:center;gap:8px;white-space:nowrap;padding:8px 12px;
+  border:1px solid var(--line);border-radius:var(--r);background:var(--surface);color:var(--ink);
+  font:inherit;font-size:13.5px;cursor:pointer}
+.bilah-langkah button:hover{border-color:var(--line-strong)}
+.bilah-langkah button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.bilah-langkah button[aria-current="step"]{border-color:var(--primary);color:var(--primary-ink);font-weight:600}
+.bilah-nomor{display:inline-grid;place-items:center;min-width:22px;height:22px;border-radius:999px;
+  background:var(--surface-2);font-variant-numeric:tabular-nums;font-size:12px}
+.bilah-langkah button[data-status="lengkap"] .bilah-nomor{background:var(--primary-soft);color:var(--primary-ink)}
+.bilah-langkah button[data-status="halangan"] .bilah-nomor{background:var(--danger-soft);color:var(--danger)}
+.langkah-dengan-scan{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.langkah-dengan-scan > *{min-width:0}
+.langkah-dengan-scan .ledger,.langkah-tinjau .ledger{position:static;margin-top:16px}
+.scan-po{width:100%;height:78vh;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);display:block;position:sticky;top:16px}
+.scan-kosong{padding:16px}
+.langkah-kaki{display:flex;gap:10px;justify-content:space-between;align-items:flex-start;margin:20px 0}
+.langkah-simpan{display:flex;flex-direction:column;gap:8px;flex:1 1 auto;max-width:520px}
+.langkah-simpan .tombol{width:100%;margin:0}
+.ringkas-ponsel{display:none}
+@media screen and (max-width:920px){
+  .langkah-dengan-scan{grid-template-columns:1fr}
+  .scan-po{height:60vh;position:static}
+  .ringkas-ponsel{display:flex;justify-content:space-between;gap:12px;position:sticky;bottom:0;z-index:2;
+    padding:10px 16px;background:var(--surface);border-top:1px solid var(--line);font-variant-numeric:tabular-nums;order:2}
+}
+@media screen and (max-width:520px){
+  .langkah-kaki{flex-wrap:wrap}
+  .langkah-simpan{order:-1;flex-basis:100%;max-width:none}
+  .bilah-langkah button,.langkah-kaki button{min-height:44px}
+  .halangan .tautan-kecil{display:inline-flex;align-items:center;min-height:44px}
+}
+</style><body><main class="wrap"><header style="margin-bottom:4px"><p class="eyebrow">Skolla Package 2026</p><h1>Dashboard</h1></header><div class="saring-waktu"><div class="status-baris"><a href="#" class="status-chip"><span>3 bulan</span></a><a href="#" class="status-chip"><span>6 bulan</span></a><a href="#" class="status-chip" aria-current="true"><span>12 bulan</span></a><a href="#" class="status-chip"><span>Semua</span></a></div><form class="saring-tanggal"><label for="d1">Dari</label><input id="d1" type="date"/><label for="d2">sampai</label><input id="d2" type="date"/><button type="button" class="preset">Terapkan</button></form></div><div class="kpi"><div class="kpi-kotak"><div class="kpi-label">PO pada periode ini</div><div class="kpi-angka">89</div><div class="kpi-jejak">6 ditolak</div></div><div class="kpi-kotak"><div class="kpi-label">Nilai PO</div><div class="kpi-angka">Rp1.897.000.000</div><div class="kpi-jejak">rata-rata Rp21 jt per PO</div></div><div class="kpi-kotak"><div class="kpi-label">Kerjasama jadi</div><div class="kpi-angka">12</div><div class="kpi-jejak">senilai Rp420 jt</div></div><div class="kpi-kotak"><div class="kpi-label">Siswa terlayani</div><div class="kpi-angka">14.208</div><div class="kpi-jejak">dari seluruh PO pada periode ini</div></div></div><section class="panel" style="margin-top:22px"><div class="panel-head"><h2>Tren Nilai PO</h2><span class="hint">menurut bulan PO dibuat</span></div><div class="gulir grafik-bungkus"><svg viewBox="0 0 600 202" class="grafik" role="img" aria-label="Tren nilai PO per bulan. Mar 26 Rp0; Apr 26 Rp42 jt; Mei 26 Rp88 jt; Jun 26 Rp315 jt; Jul 26 Rp640 jt; Agu 26 Rp812 jt" style="min-width:420px"><g><line x1="64" y1="168" x2="592" y2="168" class="grafik-garis"></line><text x="58" y="172" class="grafik-sumbu" text-anchor="end">Rp0</text></g><g><line x1="64" y1="93" x2="592" y2="93" class="grafik-garis"></line><text x="58" y="97" class="grafik-sumbu" text-anchor="end">Rp406 jt</text></g><g><line x1="64" y1="18" x2="592" y2="18" class="grafik-garis"></line><text x="58" y="22" class="grafik-sumbu" text-anchor="end">Rp812 jt</text></g><g tabindex="0" class="grafik-kolom"><title>Mar 26: Rp0</title><rect x="64" y="18" width="88" height="150" fill="transparent"></rect><text x="108" y="184" class="grafik-sumbu" text-anchor="middle">Mar 26</text></g><g tabindex="0" class="grafik-kolom"><title>Apr 26: Rp42 jt · 2 PO</title><rect x="152" y="18" width="88" height="150" fill="transparent"></rect><rect x="173" y="160.24137931034483" width="46" height="7.758620689655173" rx="3" class="grafik-batang"></rect><text x="196" y="184" class="grafik-sumbu" text-anchor="middle">Apr 26</text><text x="196" y="198" class="grafik-sumbu kecil" text-anchor="middle">2 PO</text></g><g tabindex="0" class="grafik-kolom"><title>Mei 26: Rp88 jt · 4 PO</title><rect x="240" y="18" width="88" height="150" fill="transparent"></rect><rect x="261" y="151.74384236453201" width="46" height="16.256157635467982" rx="3" class="grafik-batang"></rect><text x="284" y="184" class="grafik-sumbu" text-anchor="middle">Mei 26</text><text x="284" y="198" class="grafik-sumbu kecil" text-anchor="middle">4 PO</text></g><g tabindex="0" class="grafik-kolom"><title>Jun 26: Rp315 jt · 14 PO</title><rect x="328" y="18" width="88" height="150" fill="transparent"></rect><rect x="349" y="109.8103448275862" width="46" height="58.189655172413794" rx="3" class="grafik-batang"></rect><text x="372" y="184" class="grafik-sumbu" text-anchor="middle">Jun 26</text><text x="372" y="198" class="grafik-sumbu kecil" text-anchor="middle">14 PO</text></g><g tabindex="0" class="grafik-kolom"><title>Jul 26: Rp640 jt · 31 PO</title><rect x="416" y="18" width="88" height="150" fill="transparent"></rect><rect x="437" y="49.77339901477832" width="46" height="118.22660098522168" rx="3" class="grafik-batang"></rect><text x="460" y="184" class="grafik-sumbu" text-anchor="middle">Jul 26</text><text x="460" y="198" class="grafik-sumbu kecil" text-anchor="middle">31 PO</text></g><g tabindex="0" class="grafik-kolom"><title>Agu 26: Rp812 jt · 38 PO</title><rect x="504" y="18" width="88" height="150" fill="transparent"></rect><rect x="525" y="18" width="46" height="150" rx="3" class="grafik-batang"></rect><text x="548" y="184" class="grafik-sumbu" text-anchor="middle">Agu 26</text><text x="548" y="198" class="grafik-sumbu kecil" text-anchor="middle">38 PO</text></g></svg></div></section><div class="grid-dua"><section class="panel"><div class="panel-head"><h2>Komposisi PO</h2><span class="hint">seluruh PO, tahap saat ini</span></div><div class="donat-baris"><svg viewBox="0 0 120 120" class="donat" role="img" aria-label="Komposisi status PO. Draf 6 (10%); Menunggu TTD 3 (5%); Ditandatangani 5 (8%); Verifikasi 9 (15%); Ditolak 2 (3%); Terverifikasi 12 (20%); PKS terbit 7 (12%); PKS ditandatangani 11 (18%); Layanan aktif 4 (7%); Selesai 1 (2%)"><path class="donat-juring w-draf" d="M60 6A54 54 0 0 1 91.74040362379355 16.313082303752836L79.39691332565161 33.30243918562674A33 33 0 0 0 60 27Z"><title>Draf: 6 (10%)</title></path><path class="donat-juring w-menunggu-ttd" d="M91.74040362379355 16.313082303752836A54 54 0 0 1 103.68691769624716 28.25959637620645L86.69756081437326 40.60308667434839A33 33 0 0 0 79.39691332565161 33.30243918562674Z"><title>Menunggu TTD: 3 (5%)</title></path><path class="donat-juring w-ditandatangani" d="M103.68691769624716 28.25959637620645A54 54 0 0 1 113.70418234988676 54.355462983546715L92.81922254715302 56.55056071216744A33 33 0 0 0 86.69756081437326 40.60308667434839Z"><title>Ditandatangani: 5 (8%)</title></path><path class="donat-juring w-verifikasi" d="M113.70418234988676 54.355462983546715A54 54 0 0 1 96.13305274337834 100.12982057577929L82.08131000984233 84.52377924075401A33 33 0 0 0 92.81922254715302 56.55056071216744Z"><title>Verifikasi: 9 (15%)</title></path><path class="donat-juring w-ditolak" d="M96.13305274337834 100.12982057577929A54 54 0 0 1 87 106.76537180435969L76.5 88.57883832488648A33 33 0 0 0 82.08131000984233 84.52377924075401Z"><title>Ditolak: 2 (3%)</title></path><path class="donat-juring w-terverifikasi" d="M87 106.76537180435969A54 54 0 0 1 23.866947256621657 100.12982057577929L37.918689990157674 84.52377924075401A33 33 0 0 0 76.5 88.57883832488648Z"><title>Terverifikasi: 12 (20%)</title></path><path class="donat-juring w-pks-terbit" d="M23.866947256621657 100.12982057577929A54 54 0 0 1 6.295817650113243 65.6445370164533L27.180777452846982 63.449439287832575A33 33 0 0 0 37.918689990157674 84.52377924075401Z"><title>PKS terbit: 7 (12%)</title></path><path class="donat-juring w-pks-ditandatangani" d="M6.295817650113243 65.6445370164533A54 54 0 0 1 32.99999999999997 13.234628195640319L43.499999999999986 31.42116167511353A33 33 0 0 0 27.180777452846982 63.449439287832575Z"><title>PKS ditandatangani: 11 (18%)</title></path><path class="donat-juring w-aktif" d="M32.99999999999997 13.234628195640319A54 54 0 0 1 54.355462983546715 6.295817650113236L56.55056071216744 27.180777452846975A33 33 0 0 0 43.499999999999986 31.42116167511353Z"><title>Layanan aktif: 4 (7%)</title></path><path class="donat-juring w-selesai" d="M54.355462983546715 6.295817650113236A54 54 0 0 1 59.99999999999999 6L59.99999999999999 27A33 33 0 0 0 56.55056071216744 27.180777452846975Z"><title>Selesai: 1 (2%)</title></path><text x="60" y="57" class="donat-total" text-anchor="middle">60</text><text x="60" y="71" class="donat-satuan" text-anchor="middle">PO</text></svg><ul class="donat-ket"><li class=""><span class="donat-titik w-draf"></span><span class="donat-label">Draf</span><span class="donat-angka">6<span class="muted"> · 10%</span></span></li><li class=""><span class="donat-titik w-menunggu-ttd"></span><span class="donat-label">Menunggu TTD</span><span class="donat-angka">3<span class="muted"> · 5%</span></span></li><li class=""><span class="donat-titik w-ditandatangani"></span><span class="donat-label">Ditandatangani</span><span class="donat-angka">5<span class="muted"> · 8%</span></span></li><li class=""><span class="donat-titik w-verifikasi"></span><span class="donat-label">Verifikasi</span><span class="donat-angka">9<span class="muted"> · 15%</span></span></li><li class=""><span class="donat-titik w-ditolak"></span><span class="donat-label">Ditolak</span><span class="donat-angka">2<span class="muted"> · 3%</span></span></li><li class=""><span class="donat-titik w-terverifikasi"></span><span class="donat-label">Terverifikasi</span><span class="donat-angka">12<span class="muted"> · 20%</span></span></li><li class=""><span class="donat-titik w-pks-terbit"></span><span class="donat-label">PKS terbit</span><span class="donat-angka">7<span class="muted"> · 12%</span></span></li><li class=""><span class="donat-titik w-pks-ditandatangani"></span><span class="donat-label">PKS ditandatangani</span><span class="donat-angka">11<span class="muted"> · 18%</span></span></li><li class=""><span class="donat-titik w-aktif"></span><span class="donat-label">Layanan aktif</span><span class="donat-angka">4<span class="muted"> · 7%</span></span></li><li class=""><span class="donat-titik w-selesai"></span><span class="donat-label">Selesai</span><span class="donat-angka">1<span class="muted"> · 2%</span></span></li></ul></div></section><section class="panel"><div class="panel-head"><h2>Komposisi PKS</h2><span class="hint">setelah PKS terbit</span></div><div class="donat-baris"><svg viewBox="0 0 120 120" class="donat" role="img" aria-label="Komposisi status PKS. PKS terbit 7 (30%); PKS ditandatangani 11 (48%); Layanan aktif 4 (17%); Selesai 1 (4%)"><path class="donat-juring w-pks-terbit" d="M60 6A54 54 0 0 1 110.8820897944163 78.08349905723327L91.09461042992108 71.05102720164255A33 33 0 0 0 60 27Z"><title>PKS terbit: 7 (30%)</title></path><path class="donat-juring w-pks-ditandatangani" d="M110.8820897944163 78.08349905723327A54 54 0 0 1 7.129459265154566 49.01337529515777L27.690225106483346 53.285951569263084A33 33 0 0 0 91.09461042992108 71.05102720164255Z"><title>PKS ditandatangani: 11 (48%)</title></path><path class="donat-juring w-aktif" d="M7.129459265154566 49.01337529515777A54 54 0 0 1 45.43097435752068 8.00246648321884L51.0967065518182 28.223729517522624A33 33 0 0 0 27.690225106483346 53.285951569263084Z"><title>Layanan aktif: 4 (17%)</title></path><path class="donat-juring w-selesai" d="M45.43097435752068 8.00246648321884A54 54 0 0 1 60.000000000000036 6L60.00000000000002 27A33 33 0 0 0 51.0967065518182 28.223729517522624Z"><title>Selesai: 1 (4%)</title></path><text x="60" y="57" class="donat-total" text-anchor="middle">23</text><text x="60" y="71" class="donat-satuan" text-anchor="middle">PO</text></svg><ul class="donat-ket"><li class=""><span class="donat-titik w-pks-terbit"></span><span class="donat-label">PKS terbit</span><span class="donat-angka">7<span class="muted"> · 30%</span></span></li><li class=""><span class="donat-titik w-pks-ditandatangani"></span><span class="donat-label">PKS ditandatangani</span><span class="donat-angka">11<span class="muted"> · 48%</span></span></li><li class=""><span class="donat-titik w-aktif"></span><span class="donat-label">Layanan aktif</span><span class="donat-angka">4<span class="muted"> · 17%</span></span></li><li class=""><span class="donat-titik w-selesai"></span><span class="donat-label">Selesai</span><span class="donat-angka">1<span class="muted"> · 4%</span></span></li></ul></div></section></div><section class="panel"><div class="panel-head"><h2>PKS Funnel</h2><span class="hint">berapa yang lolos ke tahap berikutnya</span></div><div class="gulir"><ol class="alur" aria-label="Alur tahapan PO: PO dibuat 89, lalu Ditandatangani 71, lalu Masuk verifikasi 64, lalu Terverifikasi 46, lalu PKS terbit 23, lalu PKS bermeterai 12"><li><div class="alur-kotak"><span class="alur-angka">89</span><span class="alur-label">PO dibuat</span></div></li><li><span class="alur-panah" aria-hidden="true"><span class="alur-persen">80%</span><svg viewBox="0 0 24 12" class="alur-ikon"><path d="M0 6h18M14 2l5 4-5 4"></path></svg></span><div class="alur-kotak"><span class="alur-angka">71</span><span class="alur-label">Ditandatangani</span><span class="alur-turun">18 berhenti di sini</span></div></li><li><span class="alur-panah" aria-hidden="true"><span class="alur-persen">90%</span><svg viewBox="0 0 24 12" class="alur-ikon"><path d="M0 6h18M14 2l5 4-5 4"></path></svg></span><div class="alur-kotak"><span class="alur-angka">64</span><span class="alur-label">Masuk verifikasi</span><span class="alur-turun">7 berhenti di sini</span></div></li><li><span class="alur-panah" aria-hidden="true"><span class="alur-persen">72%</span><svg viewBox="0 0 24 12" class="alur-ikon"><path d="M0 6h18M14 2l5 4-5 4"></path></svg></span><div class="alur-kotak"><span class="alur-angka">46</span><span class="alur-label">Terverifikasi</span><span class="alur-turun">18 berhenti di sini</span></div></li><li><span class="alur-panah" aria-hidden="true"><span class="alur-persen rendah">50%</span><svg viewBox="0 0 24 12" class="alur-ikon"><path d="M0 6h18M14 2l5 4-5 4"></path></svg></span><div class="alur-kotak"><span class="alur-angka">23</span><span class="alur-label">PKS terbit</span><span class="alur-turun">23 berhenti di sini</span></div></li><li><span class="alur-panah" aria-hidden="true"><span class="alur-persen rendah">52%</span><svg viewBox="0 0 24 12" class="alur-ikon"><path d="M0 6h18M14 2l5 4-5 4"></path></svg></span><div class="alur-kotak"><span class="alur-angka">12</span><span class="alur-label">PKS bermeterai</span><span class="alur-turun">11 berhenti di sini</span></div></li></ol></div></section><section class="panel"><div class="panel-head"><h2>Lama Tiap Tahap</h2><span class="hint">median hari</span></div><ul class="peringkat" aria-label="Lama tiap tahap. Dibuat → ditandatangani 2.5 hari; Ditandatangani → terverifikasi 9 hari; Terverifikasi → surat final 3.5 hari; Surat final → PKS final 1.5 hari; PKS final → bermeterai 14 hari"><li><span class="peringkat-label" title="Dibuat → ditandatangani">Dibuat → ditandatangani</span><span class="peringkat-jalur"><span class="peringkat-isi w-primary-fill" style="width:17.857142857142858%"></span></span><span class="peringkat-angka">2.5 hari<span class="muted"> · 71 PO</span></span></li><li><span class="peringkat-label" title="Ditandatangani → terverifikasi">Ditandatangani → terverifikasi</span><span class="peringkat-jalur"><span class="peringkat-isi w-primary-fill" style="width:64.28571428571429%"></span></span><span class="peringkat-angka">9 hari<span class="muted"> · 64 PO</span></span></li><li><span class="peringkat-label" title="Terverifikasi → surat final">Terverifikasi → surat final</span><span class="peringkat-jalur"><span class="peringkat-isi w-primary-fill" style="width:25%"></span></span><span class="peringkat-angka">3.5 hari<span class="muted"> · 46 PO</span></span></li><li><span class="peringkat-label" title="Surat final → PKS final">Surat final → PKS final</span><span class="peringkat-jalur"><span class="peringkat-isi w-primary-fill" style="width:10.714285714285714%"></span></span><span class="peringkat-angka">1.5 hari<span class="muted"> · 23 PO</span></span></li><li><span class="peringkat-label" title="PKS final → bermeterai">PKS final → bermeterai</span><span class="peringkat-jalur"><span class="peringkat-isi w-primary-fill" style="width:100%"></span></span><span class="peringkat-angka">14 hari<span class="muted"> · 12 PO</span></span></li></ul></section><section class="panel"><div class="panel-head"><h2>Penolakan Verifikasi</h2><span class="hint">per fungsi</span></div><ul class="peringkat" aria-label="Penolakan per fungsi. Finance 14; Service Account 6; Tech Ops 3; Education 1"><li><span class="peringkat-label" title="Finance">Finance</span><span class="peringkat-jalur"><span class="peringkat-isi w-ditolak" style="width:100%"></span></span><span class="peringkat-angka">14<span class="muted"> · dari 64 keputusan</span></span></li><li><span class="peringkat-label" title="Service Account">Service Account</span><span class="peringkat-jalur"><span class="peringkat-isi w-ditolak" style="width:42.857142857142854%"></span></span><span class="peringkat-angka">6<span class="muted"> · dari 64 keputusan</span></span></li><li><span class="peringkat-label" title="Tech Ops">Tech Ops</span><span class="peringkat-jalur"><span class="peringkat-isi w-ditolak" style="width:21.428571428571427%"></span></span><span class="peringkat-angka">3<span class="muted"> · dari 64 keputusan</span></span></li><li><span class="peringkat-label" title="Education">Education</span><span class="peringkat-jalur"><span class="peringkat-isi w-ditolak" style="width:7.142857142857142%"></span></span><span class="peringkat-angka">1<span class="muted"> · dari 64 keputusan</span></span></li></ul></section><div class="grid-dua"><section class="panel"><div class="panel-head"><h2>Sebaran Paket</h2><span class="hint">satu juring</span></div><div class="donat-baris"><svg viewBox="0 0 120 120" class="donat" role="img" aria-label="Sebaran paket. LMS Juara 1 (100%)"><circle cx="60" cy="60" r="43.5" stroke-width="21" class="donat-cincin w-verifikasi"></circle><text x="60" y="57" class="donat-total" text-anchor="middle">1</text><text x="60" y="71" class="donat-satuan" text-anchor="middle">PO</text></svg><ul class="donat-ket"><li class=""><span class="donat-titik w-verifikasi"></span><span class="donat-label">LMS Juara</span><span class="donat-angka">1<span class="muted"> · 100%</span></span></li></ul></div></section><section class="panel"><div class="panel-head"><h2>Sebaran Jenjang</h2><span class="hint">tanpa warna, dan dengan nilai nol</span></div><div class="donat-baris"><svg viewBox="0 0 120 120" class="donat" role="img" aria-label="Sebaran jenjang. SD 3 (75%); SMA 1 (25%)"><path class="donat-juring w-verifikasi" d="M60 6A54 54 0 1 1 6 60.00000000000001L27 60.00000000000001A33 33 0 1 0 60 27Z"><title>SD: 3 (75%)</title></path><path class="donat-juring w-menunggu-ttd" d="M6 60.00000000000001A54 54 0 0 1 59.99999999999999 6L59.99999999999999 27A33 33 0 0 0 27 60.00000000000001Z"><title>SMA: 1 (25%)</title></path><text x="60" y="57" class="donat-total" text-anchor="middle">4</text><text x="60" y="71" class="donat-satuan" text-anchor="middle">PO</text></svg><ul class="donat-ket"><li class=""><span class="donat-titik w-verifikasi"></span><span class="donat-label">SD</span><span class="donat-angka">3<span class="muted"> · 75%</span></span></li><li class="nol"><span class="donat-titik w-menunggu-ttd"></span><span class="donat-label">SMP</span><span class="donat-angka">0<span class="muted"> · 0%</span></span></li><li class=""><span class="donat-titik w-pks-terbit"></span><span class="donat-label">SMA</span><span class="donat-angka">1<span class="muted"> · 25%</span></span></li></ul></div></section></div><section class="panel"><div class="panel-head"><h2>Komponen Terlaris</h2><span class="hint">delapan teratas</span></div><p class="muted" style="margin:2px 0 0;font-size:13px">Menghitung berapa PO memilih tiap komponen, jadi satu PO bisa masuk ke beberapa juring sekaligus — angkanya bukan pembagian PO.</p><div class="donat-baris"><svg viewBox="0 0 120 120" class="donat" role="img" aria-label="Komponen terlaris. Learning Management System 71 (20%); Bimbel Online — Modul 64 (18%); Bimbel Online — Video 58 (16%); Latihan Soal 52 (14%); Asesmen Psikolog 44 (12%); Tryout 39 (11%); Live Class 21 (6%); Analisis SNBP 12 (3%)"><path class="donat-juring w-verifikasi" d="M60 6A54 54 0 0 1 110.9973542100872 42.2441597334595L91.16504979505329 49.149208726003025A33 33 0 0 0 60 27Z"><title>Learning Management System: 71 (20%)</title></path><path class="donat-juring w-menunggu-ttd" d="M110.9973542100872 42.2441597334595A54 54 0 0 1 98.43217099433717 97.93373475762739L83.4863267187616 83.18172679632785A33 33 0 0 0 91.16504979505329 49.149208726003025Z"><title>Bimbel Online — Modul: 64 (18%)</title></path><path class="donat-juring w-pks-terbit" d="M98.43217099433717 97.93373475762739A54 54 0 0 1 48.34412368987876 112.7270381061098L52.87696447714813 92.22207884262265A33 33 0 0 0 83.4863267187616 83.18172679632785Z"><title>Bimbel Online — Video: 58 (16%)</title></path><path class="donat-juring w-aktif" d="M48.34412368987876 112.7270381061098A54 54 0 0 1 11.333126496816 83.3994748536177L30.25913285916533 74.29967907721081A33 33 0 0 0 52.87696447714813 92.22207884262265Z"><title>Latihan Soal: 52 (14%)</title></path><path class="donat-juring w-terverifikasi" d="M11.333126496816 83.3994748536177A54 54 0 0 1 8.701346134900348 43.13441042747996L28.650822637994658 49.69325081679331A33 33 0 0 0 30.25913285916533 74.29967907721081Z"><title>Asesmen Psikolog: 44 (12%)</title></path><path class="donat-juring w-ditolak" d="M8.701346134900348 43.13441042747996A54 54 0 0 1 30.661784736979786 14.664923897927686L42.07109067259876 32.29523127095581A33 33 0 0 0 28.650822637994658 49.69325081679331Z"><title>Tryout: 39 (11%)</title></path><path class="donat-juring w-selesai" d="M30.661784736979786 14.664923897927686A54 54 0 0 1 48.8034148737535 7.173524805163119L53.157642422849364 27.717154047599685A33 33 0 0 0 42.07109067259876 32.29523127095581Z"><title>Live Class: 21 (6%)</title></path><path class="donat-juring w-pks-ditandatangani" d="M48.8034148737535 7.173524805163119A54 54 0 0 1 59.99999999999999 6L59.99999999999999 27A33 33 0 0 0 53.157642422849364 27.717154047599685Z"><title>Analisis SNBP: 12 (3%)</title></path><text x="60" y="57" class="donat-total" text-anchor="middle">361</text><text x="60" y="71" class="donat-satuan" text-anchor="middle">dipilih</text></svg><ul class="donat-ket"><li class=""><span class="donat-titik w-verifikasi"></span><span class="donat-label">Learning Management System</span><span class="donat-angka">71<span class="muted"> · 20%</span></span></li><li class=""><span class="donat-titik w-menunggu-ttd"></span><span class="donat-label">Bimbel Online — Modul</span><span class="donat-angka">64<span class="muted"> · 18%</span></span></li><li class=""><span class="donat-titik w-pks-terbit"></span><span class="donat-label">Bimbel Online — Video</span><span class="donat-angka">58<span class="muted"> · 16%</span></span></li><li class=""><span class="donat-titik w-aktif"></span><span class="donat-label">Latihan Soal</span><span class="donat-angka">52<span class="muted"> · 14%</span></span></li><li class=""><span class="donat-titik w-terverifikasi"></span><span class="donat-label">Asesmen Psikolog</span><span class="donat-angka">44<span class="muted"> · 12%</span></span></li><li class=""><span class="donat-titik w-ditolak"></span><span class="donat-label">Tryout</span><span class="donat-angka">39<span class="muted"> · 11%</span></span></li><li class=""><span class="donat-titik w-selesai"></span><span class="donat-label">Live Class</span><span class="donat-angka">21<span class="muted"> · 6%</span></span></li><li class=""><span class="donat-titik w-pks-ditandatangani"></span><span class="donat-label">Analisis SNBP</span><span class="donat-angka">12<span class="muted"> · 3%</span></span></li></ul></div></section><section class="panel"><div class="panel-head"><h2>Corong per Sales</h2><span class="hint">Prisma</span></div><p class="muted" style="margin:2px 0 0;font-size:13px">Penyaring ini hanya mengubah corong di bawahnya, bukan panel lain di halaman ini.</p><div class="status-baris"><a href="#" class="status-chip"><span>Semua</span></a><a href="#" class="status-chip" aria-current="true"><span>Prisma</span></a><a href="#" class="status-chip"><span>Mekky</span></a><a href="#" class="status-chip"><span>Cahyo</span></a><a href="#" class="status-chip"><span>Fedri</span></a></div><div class="gulir"><ol class="alur" aria-label="Alur tahapan PO: PO dibuat 24, lalu Ditandatangani 19, lalu Masuk verifikasi 17, lalu Terverifikasi 11, lalu PKS terbit 6, lalu PKS bermeterai 4"><li><div class="alur-kotak"><span class="alur-angka">24</span><span class="alur-label">PO dibuat</span></div></li><li><span class="alur-panah" aria-hidden="true"><span class="alur-persen">79%</span><svg viewBox="0 0 24 12" class="alur-ikon"><path d="M0 6h18M14 2l5 4-5 4"></path></svg></span><div class="alur-kotak"><span class="alur-angka">19</span><span class="alur-label">Ditandatangani</span><span class="alur-turun">5 berhenti di sini</span></div></li><li><span class="alur-panah" aria-hidden="true"><span class="alur-persen">89%</span><svg viewBox="0 0 24 12" class="alur-ikon"><path d="M0 6h18M14 2l5 4-5 4"></path></svg></span><div class="alur-kotak"><span class="alur-angka">17</span><span class="alur-label">Masuk verifikasi</span><span class="alur-turun">2 berhenti di sini</span></div></li><li><span class="alur-panah" aria-hidden="true"><span class="alur-persen rendah">65%</span><svg viewBox="0 0 24 12" class="alur-ikon"><path d="M0 6h18M14 2l5 4-5 4"></path></svg></span><div class="alur-kotak"><span class="alur-angka">11</span><span class="alur-label">Terverifikasi</span><span class="alur-turun">6 berhenti di sini</span></div></li><li><span class="alur-panah" aria-hidden="true"><span class="alur-persen rendah">55%</span><svg viewBox="0 0 24 12" class="alur-ikon"><path d="M0 6h18M14 2l5 4-5 4"></path></svg></span><div class="alur-kotak"><span class="alur-angka">6</span><span class="alur-label">PKS terbit</span><span class="alur-turun">5 berhenti di sini</span></div></li><li><span class="alur-panah" aria-hidden="true"><span class="alur-persen rendah">67%</span><svg viewBox="0 0 24 12" class="alur-ikon"><path d="M0 6h18M14 2l5 4-5 4"></path></svg></span><div class="alur-kotak"><span class="alur-angka">4</span><span class="alur-label">PKS bermeterai</span><span class="alur-turun">2 berhenti di sini</span></div></li></ol></div></section><section class="panel"><div class="panel-head"><h2>PKS Menggantung</h2><span class="hint">final tapi pindaiannya belum masuk</span></div><ul class="peringkat" aria-label="PKS menggantung. SMA Muhammadiyah 2 Surakarta 31 hari; SMKS PGRI 1 Surabaya 12 hari; SMP Negeri 4 Mengwi 4 hari"><li><span class="peringkat-label" title="SMA Muhammadiyah 2 Surakarta">SMA Muhammadiyah 2 Surakarta</span><span class="peringkat-jalur"><span class="peringkat-isi w-pks-terbit" style="width:100%"></span></span><span class="peringkat-angka">31 hari<span class="muted"> · Rp52 jt</span></span></li><li><span class="peringkat-label" title="SMKS PGRI 1 Surabaya">SMKS PGRI 1 Surabaya</span><span class="peringkat-jalur"><span class="peringkat-isi w-pks-terbit" style="width:38.70967741935484%"></span></span><span class="peringkat-angka">12 hari<span class="muted"> · Rp75 jt</span></span></li><li><span class="peringkat-label" title="SMP Negeri 4 Mengwi">SMP Negeri 4 Mengwi</span><span class="peringkat-jalur"><span class="peringkat-isi w-pks-terbit" style="width:12.903225806451612%"></span></span><span class="peringkat-angka">4 hari<span class="muted"> · Rp180 jt</span></span></li></ul></section><section class="panel"><div class="panel-head"><h2>Proyeksi Penerimaan</h2><span class="hint">enam bulan ke depan</span></div><div class="gulir grafik-bungkus"><svg viewBox="0 0 600 202" class="grafik" role="img" aria-label="Proyeksi penerimaan dari termin. Agu 26 Rp180 jt; Sep 26 Rp420 jt; Okt 26 Rp95 jt; Nov 26 Rp0; Des 26 Rp310 jt; Jan 27 Rp120 jt" style="min-width:420px"><g><line x1="64" y1="168" x2="592" y2="168" class="grafik-garis"></line><text x="58" y="172" class="grafik-sumbu" text-anchor="end">Rp0</text></g><g><line x1="64" y1="93" x2="592" y2="93" class="grafik-garis"></line><text x="58" y="97" class="grafik-sumbu" text-anchor="end">Rp210 jt</text></g><g><line x1="64" y1="18" x2="592" y2="18" class="grafik-garis"></line><text x="58" y="22" class="grafik-sumbu" text-anchor="end">Rp420 jt</text></g><g tabindex="0" class="grafik-kolom"><title>Agu 26: Rp180 jt</title><rect x="64" y="18" width="88" height="150" fill="transparent"></rect><rect x="85" y="103.71428571428572" width="46" height="64.28571428571428" rx="3" class="grafik-batang"></rect><text x="108" y="184" class="grafik-sumbu" text-anchor="middle">Agu 26</text></g><g tabindex="0" class="grafik-kolom"><title>Sep 26: Rp420 jt</title><rect x="152" y="18" width="88" height="150" fill="transparent"></rect><rect x="173" y="18" width="46" height="150" rx="3" class="grafik-batang"></rect><text x="196" y="184" class="grafik-sumbu" text-anchor="middle">Sep 26</text></g><g tabindex="0" class="grafik-kolom"><title>Okt 26: Rp95 jt</title><rect x="240" y="18" width="88" height="150" fill="transparent"></rect><rect x="261" y="134.07142857142856" width="46" height="33.92857142857143" rx="3" class="grafik-batang"></rect><text x="284" y="184" class="grafik-sumbu" text-anchor="middle">Okt 26</text></g><g tabindex="0" class="grafik-kolom"><title>Nov 26: Rp0</title><rect x="328" y="18" width="88" height="150" fill="transparent"></rect><text x="372" y="184" class="grafik-sumbu" text-anchor="middle">Nov 26</text></g><g tabindex="0" class="grafik-kolom"><title>Des 26: Rp310 jt</title><rect x="416" y="18" width="88" height="150" fill="transparent"></rect><rect x="437" y="57.28571428571428" width="46" height="110.71428571428572" rx="3" class="grafik-batang"></rect><text x="460" y="184" class="grafik-sumbu" text-anchor="middle">Des 26</text></g><g tabindex="0" class="grafik-kolom"><title>Jan 27: Rp120 jt</title><rect x="504" y="18" width="88" height="150" fill="transparent"></rect><rect x="525" y="125.14285714285714" width="46" height="42.857142857142854" rx="3" class="grafik-batang"></rect><text x="548" y="184" class="grafik-sumbu" text-anchor="middle">Jan 27</text></g></svg></div></section></main></body></html>
